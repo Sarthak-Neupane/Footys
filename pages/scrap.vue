@@ -78,7 +78,7 @@ const sendPlayerDetailToDb = async (e) => {
     });
     e.clubs = updatedArray;
     finalArray.push({
-      id: i + 506,
+      id: i + 996,
       name: e.name,
       shirtNumber: e.shirtNumber,
       position: e.position,

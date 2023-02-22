@@ -5,7 +5,7 @@ const run = async () => {
   const page = await browser.newPage({ headless: false });
 
   await page.goto(
-    "https://www.transfermarkt.com/afc-bournemouth/kader/verein/989/saison_id/2022/plus/1"
+    "https://www.transfermarkt.com/cadiz-cf/kader/verein/2687/saison_id/2022/plus/1"
   );
 
   // Set screen size
