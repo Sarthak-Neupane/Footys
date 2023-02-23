@@ -2,14 +2,14 @@
         <div class="w-1/2 border-solid border-r-[0px] border-lightBlack">
             <TransitionGroup name="list" tag="ul" class="w-full flex flex-col justify-start items-start" @before-enter="onBeforeEnter">
                 <li v-for="guess in getPlayerGuesses" :key="guess._id" class="guess"
-                    :class="guess.isCorrect === true ? 'text-green' : 'text-lightBlack'"> {{ guess.name }} </li>
+                    :class="guess.isCorrect === true ? `text-${getPlayerColor}` : 'text-lightBlack'"> {{ guess.name }} </li>
             </TransitionGroup>
         </div>
 
     <div class=" w-1/2">
             <TransitionGroup name="list" tag="ul" class="w-full flex flex-col justify-start items-start text-right" @before-enter="onBeforeEnter">
                 <li v-for="guess in getOpponentGuesses" :key="guess._id" class="guess"
-                    :class="guess.isCorrect === true ? 'text-blue' : 'text-lightBlack'"> {{ guess.name }} </li>
+                    :class="guess.isCorrect === true ? `text-${getOpponentColor}` : 'text-lightBlack'"> {{ guess.name }} </li>
             </TransitionGroup>
     </div>
 </template>
@@ -21,6 +21,8 @@ import { storeToRefs } from 'pinia'
 const store = useGameStore();
 const { getPlayerGuesses } = storeToRefs(store)
 const { getOpponentGuesses } = storeToRefs(store)
+const { getPlayerColor } = storeToRefs(store)
+const { getOpponentColor } = storeToRefs(store)
 
 function onBeforeEnter(el) {
     if(el.classList.contains('text-lightBlack')){

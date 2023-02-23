@@ -17,7 +17,7 @@
               <SearchBar @submit-answer="sendGuessToEmit" v-if="playerTurn" />
             </div>
             <div class="w-full flex flex-col justify-center items-center gap-5" v-else>
-              <action-buttons @play-again="resetStore"></action-buttons>
+              <action-buttons></action-buttons>
             </div>
           </transition>
         </div>
@@ -29,14 +29,14 @@
                   <p class="text-base sm:text-2xl md:text-3xl font-bold">
                     YOUR TURN
                   </p>
-                  <div class="w-5 h-5 bg-green"></div>
+                  <div class="w-5 h-5" :class="`bg-${getPlayerColor}`"></div>
                 </div>
 
                 <div class="w-full flex justify-center items-center gap-10" v-else>
                   <p class="text-base sm:text-2xl md:text-3xl font-bold">
                     OPPONENT'S TURN
                   </p>
-                  <div class="w-5 h-5 bg-blue"></div>
+                  <div class="w-5 h-5" :class="`bg-${getOpponentColor}`"></div>
                 </div>
               </Transition>
               <div class="relative h-20 w-20 flex justify-center items-center">
@@ -45,8 +45,8 @@
             </div>
             <div class="result" v-else>
               <h1 class="font-black text-center text-4xl lg:text-6xl" v-if="gameResult != 'draw'">
-                <span :class="winner === player ? 'text-green' : 'text-lightBlack'"> YOU </span><span
-                  :class="winner === player ? 'text-blue' : 'text-lightBlack'">{{ winner === player ? 'WIN' : 'LOSE'
+                <span :class="winner === player ? `text-${getPlayerColor}` : 'text-lightBlack'"> YOU </span><span
+                  :class="winner === player ? `text-${getPlayerColor}` : 'text-lightBlack'">{{ winner === player ? 'WIN' : 'LOSE'
                   }}</span>
               </h1>
               <h1 class="font-black text-center text-4xl lg:text-6xl" v-else>
@@ -67,7 +67,6 @@
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/store/'
 import { v4 as uuidv4 } from 'uuid'
-import { set } from 'mongoose';
 
 const store = useGameStore()
 const player = ref(null)
@@ -87,10 +86,11 @@ onBeforeMount(() => {
     localStorage.setItem('id', player.value)
   }
 })
-
   setInterval(() => {
     if(gameStartsIn.value > 0){
       gameStartsIn.value--
+    } else {
+      clearInterval()
     }
   }, 1000)
 
@@ -103,14 +103,18 @@ watch(gameStartsIn, (current, previous)=>{
 })
 
 $socket.on('startGame', (e) => {
-  console.log(e)
+  console.log('startGame', e)
   if (e.player1 === $socket.id) {
     store.setInitialPlayerTurn(true)
+    store.setPlayerColor(e.color1)
   } else {
     store.setInitialPlayerTurn(false)
+    store.setPlayerColor(e.color2)
   }
 })
 
+const { getPlayerColor } = storeToRefs(store)
+const { getOpponentColor } = storeToRefs(store)
 const { playerTurn } = storeToRefs(store)
 const { gameResult } = storeToRefs(store)
 const { gameEnd } = storeToRefs(store)
@@ -176,10 +180,10 @@ const gameEnded = (e) => {
   }
 }
 
-const resetStore = () => {
-  store.reset()
-  playAgain.value++
-}
+// const resetStore = () => {
+//   store.reset()
+//   playAgain.value++
+// }
 
 const columnClubs = [
   {

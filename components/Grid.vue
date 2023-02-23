@@ -22,9 +22,13 @@
 
 <script setup>
 import { useGameStore } from '@/store/';
-const { $socket } = useNuxtApp()
+import { storeToRefs } from 'pinia';
+// const { $socket } = useNuxtApp()
 
 const store = useGameStore();
+const { playerColor } = storeToRefs(store);
+const { opponentColor } = storeToRefs(store);
+
 
 const props = defineProps({
     'gridAnswers': Array,
@@ -42,11 +46,10 @@ const emit = defineEmits(['playerGuess', 'gameEnded'])
 const playerIndexes = ref([])
 const opponentIndexes = ref([])
 const occupiedIndexes = ref([])
-
 const isCorrect = ref(null)
 
+
 watch(() => props.currentAnswer, (currentGuess, previousGuess) => {
-    // console.log(currentGuess)
     checkAnswer(currentGuess)
 });
 
@@ -110,6 +113,7 @@ const checkAnswer = (answer) => {
                             isDraw: true
                         })
                     }
+                    grids[ind].value.classList.add(`bg-${store.getPlayerColor}`)
                 } else {
                     opponentIndexes.value.push(Number(grids[ind].value.dataset.number))
                     const winner = checkWinner(opponentIndexes.value, opponentIndexes.value.length, 15)
@@ -124,8 +128,8 @@ const checkAnswer = (answer) => {
                             isDraw: true
                         })
                     }
+                    grids[ind].value.classList.add(`bg-${store.getOpponentColor}`)
                 }
-                grids[ind].value.classList.add(answer.playerId === localStorage.getItem('id') ? 'bg-green' : 'bg-blue')
                 isCorrect.value = true
                 break outerloop
             } else {

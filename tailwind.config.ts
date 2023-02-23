@@ -4,6 +4,7 @@ module.exports = {
   darkMode: "class",
   theme: {
     colors: {
+      ...defaultTheme.colors,
       'blue': '#6B59D6',
       'green': '#82AF81',
       'darkWhite': '#DBDBDB',

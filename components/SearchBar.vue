@@ -9,7 +9,7 @@
         </ul>
     </div>
     <input type="text" id="playerSearch" v-model.trim="searchValue" @input="checkTyping()"
-        class="border-solid border-lightBlack focus:border-blue focus:outline-none border-b-2 w-full px-5 py-3" />
+        class="border-solid border-lightBlack focus:outline-none border-b-2 w-full px-5 py-3" :class="`focus:border-${playerColor}`" />
     <label for="playerSearch"
         class="absolute w-full top-1/2 left-0 -translate-y-2/4 pointer-events-none text-xs sm:text-base px-5 text-lightBlack">
         {{ labelInput }}</label>
@@ -18,6 +18,9 @@
 
 
 <script setup>
+import { useGameStore } from '@/store/';
+import { storeToRefs } from 'pinia';
+
 const emit = defineEmits({
   submitAnswer(payload) {
     if(payload === undefined) return false
@@ -25,9 +28,11 @@ const emit = defineEmits({
   }
 })
 
+const store = useGameStore();
+const { playerColor } = storeToRefs(store);
+
 const searchValue = ref('');
 const labelInput = ref("Search Player");
-
 const players = ref([])
 
 
