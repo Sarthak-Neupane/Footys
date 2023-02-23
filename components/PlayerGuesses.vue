@@ -26,7 +26,7 @@ function onBeforeEnter(el) {
     if(el.classList.contains('text-lightBlack')){
         el.classList.add('animation')
     }
-    console.log(el)
+    // console.log(el)
 }
 
 </script>

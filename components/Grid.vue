@@ -22,6 +22,9 @@
 
 <script setup>
 import { useGameStore } from '@/store/';
+const { $socket } = useNuxtApp()
+
+const store = useGameStore();
 
 const props = defineProps({
     'gridAnswers': Array,
@@ -33,7 +36,8 @@ const props = defineProps({
 
 const emit = defineEmits(['playerGuess', 'gameEnded'])
 
-const store = useGameStore();
+
+
 
 const playerIndexes = ref([])
 const opponentIndexes = ref([])
@@ -42,8 +46,10 @@ const occupiedIndexes = ref([])
 const isCorrect = ref(null)
 
 watch(() => props.currentAnswer, (currentGuess, previousGuess) => {
+    // console.log(currentGuess)
     checkAnswer(currentGuess)
 });
+
 
 watch(() => props.playAgain, (currentGuess, previousGuess) => {
     grids.forEach((grid) => {
@@ -90,13 +96,15 @@ const checkAnswer = (answer) => {
         for (let e of elem) {
             if (e.id === answer.id) {
                 occupiedIndexes.value.push(ind)
-                console.log(occupiedIndexes.value)
-                if(store.getCurrentPlayer === 0) {
+                // console.log(occupiedIndexes.value)
+                if(answer.playerId === localStorage.getItem('id')) {
                     playerIndexes.value.push(Number(grids[ind].value.dataset.number))
                     const winner = checkWinner(playerIndexes.value, playerIndexes.value.length, 15)
                     if(winner){
                         emit('gameEnded', {
-                            isDraw: false})
+                            winner: answer.playerId,
+                            isDraw: false
+                        })
                     } else if(winner === false && occupiedIndexes.value.length === 9) {
                         emit('gameEnded', {
                             isDraw: true
@@ -107,6 +115,7 @@ const checkAnswer = (answer) => {
                     const winner = checkWinner(opponentIndexes.value, opponentIndexes.value.length, 15)
                     if(winner){
                         emit('gameEnded', {
+                            winner: answer.playerId,
                             isDraw: false
                         })
                     } else if(winner === false && occupiedIndexes.value.length === 9) {
@@ -116,7 +125,7 @@ const checkAnswer = (answer) => {
                         })
                     }
                 }
-                grids[ind].value.classList.add(store.getCurrentPlayer === 0 ? 'bg-green' : 'bg-blue')
+                grids[ind].value.classList.add(answer.playerId === localStorage.getItem('id') ? 'bg-green' : 'bg-blue')
                 isCorrect.value = true
                 break outerloop
             } else {

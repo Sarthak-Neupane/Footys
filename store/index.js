@@ -1,10 +1,13 @@
 import { defineStore } from 'pinia'
+import { useStorage } from '@vueuse/core'
+import { v4 as uuidv4 } from 'uuid';
 
 export const useGameStore = defineStore('game', ()=>{
     const gameEnd = ref(false)
     const gameResult = ref(false)
     const winner = ref(null)
-    const player = ref(0)
+    const currentPlayer = ref('id')
+    const playerTurn = ref(true)
     const playerGuesses = ref([])
     const opponenetGuesses = ref([])
 
@@ -12,17 +15,25 @@ export const useGameStore = defineStore('game', ()=>{
         gameEnd.value = true
     }
 
-    const setWinner = ()=>{
-        winner.value = player.value
+    const setWinner = (id)=>{
+        winner.value = id
     }
 
     const setResult = (result)=>{
         gameResult.value = result
     }
 
+    const setCurrentPlayer = (id)=>{
+        currentPlayer.value = id
+    }
+
     const getCurrentPlayer = computed(()=>{
-        return player.value
+        return currentPlayer.value
     })
+
+    const addPlayerGuess = (guess)=>{
+        playerGuesses.value.push(guess)
+    }
 
     const getPlayerGuesses = computed(()=>{
         return playerGuesses.value
@@ -32,26 +43,25 @@ export const useGameStore = defineStore('game', ()=>{
         return opponenetGuesses.value
     })
 
-    const changeCurrentPlayer = ()=>{
-        player.value = player.value === 0 ? 1 : 0
-    }
-
-    const addPlayerGuess = (guess)=>{
-        playerGuesses.value.push(guess)
-    }
-
     const addOpponentGuess = (guess)=>{
         opponenetGuesses.value.push(guess)
     }
 
-    const reset = ()=>{
-        gameEnd.value = false
-        gameResult.value = false
-        winner.value = null
-        player.value = 0
-        playerGuesses.value = []
-        opponenetGuesses.value = []
+    const changePlayerTurn = ()=>{
+        playerTurn.value = !playerTurn.value
     }
 
-    return { gameEnd, winner, player, getCurrentPlayer, changeCurrentPlayer, addPlayerGuess, addOpponentGuess, getPlayerGuesses, getOpponentGuesses, setGameEnd, setWinner, setResult, gameResult, reset }
+    const setInitialPlayerTurn = (e)=>{
+        playerTurn.value = e
+    }
+
+    const reset = ()=>{
+        // gameEnd.value = false
+        // gameResult.value = false
+        // // winner.value = null
+        // playerGuesses.value = []
+        // opponenetGuesses.value = []
+    }
+
+    return { gameEnd, winner, getCurrentPlayer, addPlayerGuess, addOpponentGuess, getPlayerGuesses, getOpponentGuesses, setGameEnd, setWinner, setResult, gameResult, reset, setCurrentPlayer, changePlayerTurn, playerTurn, setInitialPlayerTurn }
 })

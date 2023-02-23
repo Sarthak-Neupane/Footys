@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen">
-    <canvas class="h-screen w-screen max-h-screen max-w-full absolute bottom-0 left-0 pointer-events-none" ref="canvas"></canvas>
+    <canvas class="h-screen w-screen max-h-screen max-w-full absolute bottom-0 left-0 pointer-events-none"
+      ref="canvas"></canvas>
     <div class="bg-none border-b-[1px] border-solid border-lightBlack w-full text-center py-4 md:py-6">
       <logo-name class="font-black text-4xl"></logo-name>
     </div>
@@ -9,10 +10,10 @@
       <div class="w-full px-6 flex flex-col md:flex-row justify-center items-center gap-7 md:gap-12">
         <div class="w-full flex flex-col justify-center items-center gap-8 md:gap-12">
           <grid :gridAnswers="gridAnswers" :columnClubs="columnClubs" :rowClubs="rowClubs" :currentAnswer="currentAnswer"
-            :playAgain="playAgain" @player-guess="sendGuessToStore" @game-ended="gameEnded"></grid>
+            :gameEnd="gameEnd" :playAgain="playAgain" @player-guess="sendGuessToStore" @game-ended="gameEnded"></grid>
           <transition name="fade" mode="out-in">
             <div class="relative w-full md:w-full flex justify-center items-center" v-if="!gameEnd">
-              <SearchBar @submit-answer="sendGuessToCheck" />
+              <SearchBar @submit-answer="sendGuessToEmit" v-if="playerTurn" />
             </div>
             <div class="w-full flex flex-col justify-center items-center gap-5" v-else>
               <action-buttons @play-again="resetStore"></action-buttons>
@@ -23,7 +24,7 @@
           <Transition name="fade">
             <div class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full" v-if="!gameEnd">
               <Transition name="earlyFade" mode="out-in">
-                <div class="w-full flex justify-center items-center gap-10" v-if="getCurrentPlayer === 0">
+                <div class="w-full flex justify-center items-center gap-10" v-if="playerTurn">
                   <p class="text-base sm:text-2xl md:text-3xl font-bold">
                     YOUR TURN
                   </p>
@@ -43,7 +44,8 @@
             </div>
             <div class="result" v-else>
               <h1 class="font-black text-center text-4xl lg:text-6xl" v-if="gameResult != 'draw'">
-                <span :class="winner === 0 ? 'text-green' : 'text-lightBlack'"> YOU </span><span :class="winner === 0 ? 'text-blue' : 'text-lightBlack'">{{ winner === 0 ? 'WIN' : 'LOSE' }}</span>
+                <span :class="winner === player ? 'text-green' : 'text-lightBlack'"> YOU </span><span
+                  :class="winner === player ? 'text-blue' : 'text-lightBlack'">{{ winner === player ? 'WIN' : 'LOSE' }}</span>
               </h1>
               <h1 class="font-black text-center text-4xl lg:text-6xl" v-else>
                 <span class="text-lightBlack"> Oops! YOU DREW </span>
@@ -62,52 +64,98 @@
 <script setup>
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/store/'
-
-const canvas = ref(null)
-
-const { $confetti } = useNuxtApp()
-
-console.log($confetti)
-
-// const jsConfetti = $confetti({ canvas: canvas.value })
-
-
-
+import { v4 as uuidv4 } from 'uuid'
 
 const store = useGameStore()
+const player = ref(null)
 
-const { getCurrentPlayer } = storeToRefs(store)
+const { $confetti } = useNuxtApp()
+const { $socket } = useNuxtApp()
+
+
+onBeforeMount(() => {
+  if (localStorage.getItem('id')) {
+    player.value = localStorage.getItem('id')
+    $socket.emit('join', { id: player.value })
+  } else {
+    player.value = uuidv4()
+    localStorage.setItem('id', player.value)
+    $socket.emit('join', { id: player.value })
+  }
+})
+
+
+
+$socket.on('startGame', (e) => {
+    if(e.player1 === $socket.id) {
+      store.setInitialPlayerTurn(true)
+    } else {
+      store.setInitialPlayerTurn(false)
+    }
+})
+
+const {playerTurn} = storeToRefs(store)
 const { gameResult } = storeToRefs(store)
 const { gameEnd } = storeToRefs(store)
 const { winner } = storeToRefs(store)
 
+const canvas = ref(null)
 const currentAnswer = ref({});
 const playAgain = ref(0);
 
-const sendGuessToCheck = (e) => {
-  currentAnswer.value = e
+const sendGuessToEmit = (e) => {
+  $socket.emit('guess', { guess: e, id: player.value })
+  currentAnswer.value = {
+    ...e,
+    'playerId': player.value
+  }
 }
 
+$socket.on('guess', (data) => {
+  currentAnswer.value = {
+    ...data.guess,
+    'playerId': data.player
+  }
+})
+
+
 const sendGuessToStore = (e) => {
-  if (store.getCurrentPlayer === 0) {
+  if (e.playerId === player.value) {
     store.addPlayerGuess(e)
   } else {
     store.addOpponentGuess(e)
   }
-  store.changeCurrentPlayer()
+  store.changePlayerTurn()
+  $socket.emit('changeTurn', { id: player.value })
 }
 
-const gameEnded = (e) => {
-  if (e.isDraw === true) {
-    store.setResult('draw')
+$socket.on('changeTurn', (e) => {
+  store.changePlayerTurn(e)
+})
+
+$socket.on('gameDecided', (e) => {
+  console.log('winner is ' + e.winner)
+  console.log('current player is' + player.value)
+  if(e.winner){
+    store.setResult(e.winner === player.value ? 'win' : 'lose')
+    store.setWinner(e.winner)
     store.setGameEnd()
-  } else {
-    store.setResult(store.getCurrentPlayer === 0 ? 'win' : 'lose')
-    store.setWinner()
-    store.setGameEnd()
-    if(store.getCurrentPlayer === 0) {
+    if (e.winner === player.value) {
       $confetti.addConfetti()
     }
+  } else {
+    store.setResult('draw')
+    store.setWinner(null)
+    store.setGameEnd()
+  }
+})
+
+const gameEnded = (e) => {
+  console.log(e)
+  if (e.isDraw === true) {
+    $socket.emit('gameDecided', { winner: null })
+  } else {
+    $socket.emit('gameDecided', { winner: e.winner })
   }
 }
 
@@ -547,5 +595,4 @@ const gridAnswers = [
 .earlyFade-leave-to {
   opacity: 0;
   transform: translateY(-20px);
-}
-</style>
+}</style>

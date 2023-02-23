@@ -5,7 +5,7 @@
       <div class="flex flex-col justify-center items-center gap-8 text-center text-3xl">
         <base-button class="bg-none text-green border-solid border-blue border-2 rounded-lg w-60 py-2"> How To Play
         </base-button>
-        <base-button class="bg-none text-green border-solid border-blue border-2 rounded-lg w-60 py-2"> Play Online
+        <base-button class="bg-none text-green border-solid border-blue border-2 rounded-lg w-60 py-2"> <nuxt-link to="/game">Play Online</nuxt-link>
         </base-button>
         <base-button class="bg-none text-green border-solid border-blue border-2 rounded-lg w-60 py-2"> Play A Friend
         </base-button>
@@ -16,7 +16,17 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useGameStore } from '@/store/';
+import { v4 as uuidv4 } from 'uuid';
 
+const store = useGameStore();
+
+onBeforeMount(async () => {
+  if(localStorage.getItem('id') === null) {
+    localStorage.setItem('id', uuidv4())
+  }
+  store.setCurrentPlayer(localStorage.getItem('id'))
+})
 
 const getData = async () => {
   const data = await $fetch('/api/Clubs/getClubs')
