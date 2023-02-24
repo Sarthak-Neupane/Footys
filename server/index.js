@@ -31,7 +31,7 @@ export default async _nitroApp => {
 
   const io = new Server(httpServer, {
     cors: {
-      origin: ['http://localhost:3000', 'http://localhost:8000']
+      origin: ['http://localhost:3000', 'http://localhost:8000', 'https://ficfacfoe.vercel.app']
     }
   })
 

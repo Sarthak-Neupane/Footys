@@ -6,9 +6,12 @@ export default defineNuxtConfig({
     "nuxt-icon",
     "@pinia/nuxt",
   ],
+
+  ssr: true,
   
   nitro: {
     plugins: ["~/server/index.js"],
+    preset: 'node-server',
   },
 
   runtimeConfig: {
