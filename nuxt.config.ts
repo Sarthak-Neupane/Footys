@@ -11,7 +11,6 @@ export default defineNuxtConfig({
   
   nitro: {
     plugins: ["~/server/index.js"],
-    preset: 'node-server',
   },
 
   runtimeConfig: {
