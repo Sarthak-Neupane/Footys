@@ -1,5 +1,5 @@
 import io from 'socket.io-client'
-const socket = io('https://ficfacfoe.vercel.app', {})
+const socket = io("http://localhost:8000", {})
 
 export default defineNuxtPlugin((NuxtApp) => {
     return {

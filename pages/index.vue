@@ -20,7 +20,7 @@
         class="flex flex-col justify-center items-center bg-darkWhite gap-8 py-8 px-7 rounded-md border-2 border-solid border-x-green border-y-blue">
         <div class="text-3xl font-bold text-center"> {{ matchmakingText  }} </div>
         <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green" v-if="searching"></div>
-        <base-button class="bg-none text-lightBlack font-medium border-solid border-blue border-2 rounded-lg w-60 py-2">
+        <base-button class="bg-none text-lightBlack font-medium border-solid border-blue border-2 rounded-lg w-60 py-2" @click="cancelSearch()">
           Cancel </base-button>
       </div>
     </div>
@@ -52,6 +52,11 @@ const findAGame = () => {
   searching.value = true;
   matchmakingText.value = 'Finding a game...'
   $socket.emit('joinLobby', { id: store.getCurrentPlayer })
+}
+
+const cancelSearch = () => {
+  searching.value = false;
+  $socket.emit('leaveLobby', { id: store.getCurrentPlayer })
 }
 
 watch( joiningGameIn, (current, previous)=>{

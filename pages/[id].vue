@@ -1,4 +1,15 @@
 <template>
+   <div v-if="searching">
+    <div class="fixed top-0 left-0 w-full h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
+      <div
+        class="flex flex-col justify-center items-center bg-darkWhite gap-8 py-8 px-7 rounded-md border-2 border-solid border-x-green border-y-blue">
+        <div class="text-3xl font-bold text-center"> {{ matchmakingText  }} </div>
+        <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green" v-if="searching"></div>
+        <base-button class="bg-none text-lightBlack font-medium border-solid border-blue border-2 rounded-lg w-60 py-2" @click="cancelSearch()">
+          Cancel </base-button>
+      </div>
+    </div>
+  </div>
   <div v-if="gameNotStarted"> Game Starts In {{ gameStartsIn }} </div>
   <div class="min-h-screen" v-else>
     <canvas class="h-screen w-screen max-h-screen max-w-full absolute bottom-0 left-0 pointer-events-none"
@@ -11,13 +22,13 @@
       <div class="w-full px-6 flex flex-col md:flex-row justify-center items-center gap-7 md:gap-12">
         <div class="w-full flex flex-col justify-center items-center gap-8 md:gap-12">
           <grid :gridAnswers="gridAnswers" :columnClubs="columnClubs" :rowClubs="rowClubs" :currentAnswer="currentAnswer"
-            :gameEnd="gameEnd" :playAgain="playAgain" @player-guess="sendGuessToStore" @game-ended="gameEnded"></grid>
+            :gameEnd="gameEnd" :resetGrid="resetGrid" @player-guess="sendGuessToStore" @game-ended="gameEnded"></grid>
           <transition name="fade" mode="out-in" appear>
             <div class="relative w-full md:w-full flex justify-center items-center" v-if="!gameEnd">
               <SearchBar @submit-answer="sendGuessToEmit" v-if="playerTurn" />
             </div>
             <div class="w-full flex flex-col justify-center items-center gap-5" v-else>
-              <action-buttons></action-buttons>
+              <action-buttons @new-game="startNewGame()"></action-buttons>
             </div>
           </transition>
         </div>
@@ -67,8 +78,12 @@
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/store/'
 import { v4 as uuidv4 } from 'uuid'
+import { useRoute, useRouter } from 'vue-router';
 
 const store = useGameStore()
+const $route = useRoute()
+const $router = useRouter()
+
 const player = ref(null)
 
 const { $confetti } = useNuxtApp()
@@ -119,6 +134,11 @@ const { playerTurn } = storeToRefs(store)
 const { gameResult } = storeToRefs(store)
 const { gameEnd } = storeToRefs(store)
 const { winner } = storeToRefs(store)
+
+const matchmakingText = ref('Finding a game...')
+const searching = ref(null)
+const joiningGameIn = ref(3)
+const resetGrid = ref(false)
 
 const canvas = ref(null)
 const currentAnswer = ref({});
@@ -179,11 +199,56 @@ const gameEnded = (e) => {
     $socket.emit('gameDecided', { winner: e.winner, gameId: store.gameId })
   }
 }
+watch( joiningGameIn, (current, previous)=>{
+  if(current === 0) {
+    resetGrid.value = true
+    $router.push(`/${store.gameId}`)
+  }
+})
 
-// const resetStore = () => {
-//   store.reset()
-//   playAgain.value++
-// }
+const startNewGame = () => {
+  searching.value = true
+  $socket.emit('leaveRoom', { id: player.value, gameId: store.gameId })
+}
+
+const cancelSearch = () => {
+  searching.value = false;
+  $socket.emit('leaveLobby', { id: store.getCurrentPlayer })
+}
+
+$socket.on('roomLeft', (e) => {
+  console.log('room left')
+  // reset store is left to do
+  store.resetGame()
+  $socket.emit('joinLobby', { id: store.getCurrentPlayer })
+})
+
+$socket.on('lobbyJoined', (data) => {
+    console.log('joined lobby' + data)
+  })
+  $socket.on('lobbyLeft', () => {
+    console.log('left lobby')
+  })
+
+  $socket.on('gameFound', (data) => {
+    matchmakingText.value = 'Game Found'
+    console.log('game found')
+    $socket.emit('joinGame', { id: store.getCurrentPlayer, gameId: data.gameId })
+  })
+
+  $socket.on('gameJoined', (data) => {
+    store.setGameId(data.gameId)
+    
+    setInterval(() => {
+      if (joiningGameIn.value > 0) {
+        matchmakingText.value = `Joining game in ${joiningGameIn.value}...`
+        console.log(`Joining game in ${joiningGameIn.value}...`)
+        joiningGameIn.value--
+      } else {
+        clearInterval()
+      }
+    }, 1000)
+  })
 
 const columnClubs = [
   {

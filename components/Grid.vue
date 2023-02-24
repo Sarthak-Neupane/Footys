@@ -35,12 +35,10 @@ const props = defineProps({
     'columnClubs': Array,
     'rowClubs': Array,
     'currentAnswer': Object,
-    'playAgain': Number
+    'resetGrid': Boolean
 })
 
 const emit = defineEmits(['playerGuess', 'gameEnded'])
-
-
 
 
 const playerIndexes = ref([])
@@ -53,8 +51,7 @@ watch(() => props.currentAnswer, (currentGuess, previousGuess) => {
     checkAnswer(currentGuess)
 });
 
-
-watch(() => props.playAgain, (currentGuess, previousGuess) => {
+watch(()=> props.resetGrid, (currentGuess, previousGuess) => {
     grids.forEach((grid) => {
         if(grid.value.classList.contains('bg-green')) {
             grid.value.classList.remove('bg-green')
@@ -65,7 +62,6 @@ watch(() => props.playAgain, (currentGuess, previousGuess) => {
     playerIndexes.value = []
     opponentIndexes.value = []
     occupiedIndexes.value = []
-
 });
 
 

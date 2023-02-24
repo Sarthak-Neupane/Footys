@@ -13,8 +13,6 @@ const randomNumber = (min, max, exclude) => {
   }
 }
 
-
-
 export default async _nitroApp => {
   const config = useRuntimeConfig()
   try {
@@ -31,7 +29,7 @@ export default async _nitroApp => {
 
   const io = new Server(httpServer, {
     cors: {
-      origin: ['http://localhost:3000', 'http://localhost:8000', 'https://ficfacfoe.vercel.app']
+      origin: ['http://localhost:3000', 'http://localhost:8000']
     }
   })
 
@@ -66,6 +64,9 @@ export default async _nitroApp => {
     socket.on('joinLobby', (data) => {
       joinLobby(socket, data)
     })
+    socket.on('leaveLobby', (data) => {
+      leaveLobby(socket)
+    })
     socket.on('findGame', data => {
       findGame(socket, data)
     })
@@ -84,6 +85,9 @@ export default async _nitroApp => {
     socket.on('gameDecided', data => {
       gameDecided(socket, data)
     })
+    socket.on('leaveRoom', (data)=>{
+      leaveRoom(socket, data)
+    })
   })
 
   const joinLobby = (socket, data) => {
@@ -99,7 +103,6 @@ export default async _nitroApp => {
     socket.leave('lobby')
     io.to(socket.id).emit('lobbyLeft')
   }
-
 
   const joinGame = (socket, data) => {
     leaveLobby(socket)
@@ -145,6 +148,14 @@ export default async _nitroApp => {
     io.to(data.gameId).emit('changeTurn', {
       player: data.id
     })
+  }
+
+  const leaveRoom = (socket, data) => {
+    socket.leave(data.gameId)
+    io.to(socket.id).emit('roomLeft', {
+      gameId: data.gameId
+    })
+    
   }
 
   io.of('/').adapter.on('join-room', room => {

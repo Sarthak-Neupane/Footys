@@ -69,6 +69,19 @@ export const useGameStore = defineStore('game', () => {
     opponenetGuesses.value.push(guess)
   }
 
+  const resetGame = () => {
+    gameId.value = null
+    gameEnd.value = false
+    gameResult.value = false
+    winner.value = null
+    currentPlayer.value = localStorage.getItem('id')
+    playerColor.value = null
+    opponentColor.value = null
+    playerTurn.value = true
+    playerGuesses.value = []
+    opponenetGuesses.value = []
+  }
+
   return {
     gameId,
     setGameId,
@@ -90,5 +103,6 @@ export const useGameStore = defineStore('game', () => {
     addPlayerGuess,
     getOpponentGuesses,
     addOpponentGuess,
+    resetGame
   }
 })

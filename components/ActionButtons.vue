@@ -1,6 +1,6 @@
 <template>
     <div class="flex justify-center items-center gap-8">
-        <base-button class="bg-none text-green border-solid border-blue border-2 rounded-lg  py-2 px-6" @click="$emit('playAgain')">
+        <base-button class="bg-none text-green border-solid border-blue border-2 rounded-lg  py-2 px-6" @click="$emit('newGame')">
             Play Again
         </base-button>
         <base-button class="bg-none text-green border-solid border-blue border-2 rounded-lg  py-2 px-6">
@@ -13,5 +13,5 @@
 </template>
 
 <script setup>
-    defineEmits(['playAgain'])
+    defineEmits(['newGame'])
 </script>
