@@ -23,12 +23,8 @@
 <script setup>
 import { useGameStore } from '@/store/';
 import { storeToRefs } from 'pinia';
-// const { $socket } = useNuxtApp()
 
 const store = useGameStore();
-const { playerColor } = storeToRefs(store);
-const { opponentColor } = storeToRefs(store);
-
 
 const props = defineProps({
     'gridAnswers': Array,

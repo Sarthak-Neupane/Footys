@@ -30,5 +30,5 @@ export default defineNuxtConfig({
     ],
   },
 
-  css: ["~/assets/fonts/Inter.css"],
+  css: ["~/assets/fonts/Audiowide.css"],
 });

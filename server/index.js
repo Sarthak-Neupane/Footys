@@ -158,45 +158,7 @@ export default async _nitroApp => {
     
   }
 
-  io.of('/').adapter.on('join-room', room => {
-    if (room === 'lobby') {
-      // const clients = io.of('/').adapter.rooms.get(room)
-      // const numClients = [...clients ? clients : 0]
-      // if (numClients.length > 1) {
-      //   const player1 = numClients[0]
-      //   const player2 = numClients[1]
-      //   const gameRoom = uuidv4()
-
-      //   io.to(player1).emit('gameFound', {
-      //     gameRoom: gameRoom,
-      //     player: numClients[player1],
-      //     opponent: numClients[player2]
-      //   })
-
-      //   io.to(player2).emit('gameFound', {
-      //     gameId: gameRoom,
-      //     playerSocketId: numClients[player2],
-      //     opponentSocketId: numClients[player1]
-      //   })
-      // }
-    }
-  })
-
   io.of('/').adapter.on('join-room', (room, id) => {
-    // if(room === 'gameRoom'){
-    //   // get all the socket in room
-    //   const clients = io.of("/").adapter.rooms.get(room);
-    //   // get the number of clients
-    //   const numClients = [...clients ? clients : 0];
-    //   // if there are 2 clients in the room, start the game
-    //   if(numClients.length === 2){
-    //     const number = randomNumber(0, 1, [])
-    //     io.to('gameRoom').emit('startGame', {
-    //       player1: numClients[number],
-    //       player2: numClients[number === 0 ? 1 : 0]
-    //     })
-    //   }
-    // }
     if (room === 'lobby') {
       const clients = io.of('/').adapter.rooms.get(room)
       // get the number of clients

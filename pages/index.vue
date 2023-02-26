@@ -1,28 +1,28 @@
 <template>
-  <div class="h-screen grid content-center">
-    <div class="container sm:bg-darkWhite flex flex-col justify-center items-center gap-20 mx-auto">
-      <logo-name class="font-black text-6xl"></logo-name>
-      <div class="flex flex-col justify-center items-center gap-8 text-center text-3xl">
-        <base-button class="bg-none text-green border-solid border-blue border-2 rounded-lg w-60 py-2"> How To Play
-        </base-button>
-        <base-button class="bg-none text-green border-solid border-blue border-2 rounded-lg w-60 py-2"
-          @click="findAGame()">
-          Play Online
-        </base-button>
-        <base-button class="bg-none text-green border-solid border-blue border-2 rounded-lg w-60 py-2"> Play A Friend
-        </base-button>
+  <div class="h-screen grid content-center bg-green">
+    <div class="container flex flex-col justify-center items-center gap-20 mx-auto">
+      <logo-name class="font-black text-6xl" foe-color="blue"></logo-name>
+      <div class="flex flex-col justify-center items-center gap-12 text-center text-3xl">
+        <base-card :background-back="backgroundBack" :background-front="backgroundFront" cursor="cursor-pointer"
+          :group-hover=true group-name="group"> INSTRUCTIONS </base-card>
+        <base-card :background-back="backgroundBack" :background-front="backgroundFront" cursor="cursor-pointer"
+          :group-hover=true group-name="group" @click="findAGame()"> PLAY ONLINE
+        </base-card>
       </div>
     </div>
   </div>
   <div v-if="searching">
     <div class="fixed top-0 left-0 w-full h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
-      <div
-        class="flex flex-col justify-center items-center bg-darkWhite gap-8 py-8 px-7 rounded-md border-2 border-solid border-x-green border-y-blue">
-        <div class="text-3xl font-bold text-center"> {{ matchmakingText  }} </div>
-        <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green" v-if="searching"></div>
-        <base-button class="bg-none text-lightBlack font-medium border-solid border-blue border-2 rounded-lg w-60 py-2" @click="cancelSearch()">
-          Cancel </base-button>
-      </div>
+      <base-card class="py-7 px-20" :background-back="backgroundBack" :background-front="backgroundFront" cursor="cursor-default"
+        :groupHover="false" groupName="card">
+        <div class="flex flex-col justify-center items-center gap-14">
+          <div class="text-3xl font-bold text-center"> {{ matchmakingText }} </div>
+          <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green" v-if="searching"></div>
+          <base-card class="px-8 text-xl" :background-back="backgroundBack" background-front="bg-green" :groupHover="true" groupName="group"
+            @click="cancelSearch()"> CANCEL
+          </base-card>
+        </div>
+      </base-card>
     </div>
   </div>
 </template>
@@ -30,17 +30,29 @@
 <script setup>
 import { useGameStore } from '@/store/';
 import { v4 as uuidv4 } from 'uuid';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 
-const { $socket } = useNuxtApp()
+// state management and router
 const store = useGameStore();
 const $router = useRouter();
-const $route = useRoute();
 
-const matchmakingText = ref('Finding a game...')
+// registering plugins
+const { $socket } = useNuxtApp()
+
+//refs for card props
+const backgroundFront = ref('bg-blue')
+const backgroundBack = ref('bg-lightWhite')
+
+// refs for matchmaking
+const matchmakingText = ref('FINDING A GAME')
 const searching = ref(null)
 const joiningGameIn = ref(3)
 
+// refs for custom lobby
+const lobbyRoom = ref(null)
+
+
+// set the player id if it doesn't exist
 onBeforeMount(async () => {
   if (localStorage.getItem('id') === null) {
     localStorage.setItem('id', uuidv4())
@@ -48,41 +60,57 @@ onBeforeMount(async () => {
   store.setCurrentPlayer(localStorage.getItem('id'))
 })
 
+// watcher to check if the player is has succesfully joined a game. If yes, push to the game route
+watch(joiningGameIn, (current, previous) => {
+  if (current === 0) {
+    $router.push(`/${store.gameId}`)
+  }
+})
+
+// join the lobby for matchmaking
 const findAGame = () => {
   searching.value = true;
-  matchmakingText.value = 'Finding a game...'
+  matchmakingText.value = 'FINDING A GAME'
   $socket.emit('joinLobby', { id: store.getCurrentPlayer })
 }
 
+// leave the lobby to cancel matchmaking
 const cancelSearch = () => {
   searching.value = false;
   $socket.emit('leaveLobby', { id: store.getCurrentPlayer })
 }
 
-watch( joiningGameIn, (current, previous)=>{
-  if(current === 0) {
-    $router.push(`/${store.gameId}`)
-  }
-})
+// Create A  Custom Lobby for inviting Friends
+const inviteFriend = () => {
+  lobbyRoom.value = true;
+}
 
-if ($socket && $socket.connected) {
-  console.log('connected')
-  
+
+// SOCKET EVENTS STARTS
+const socketEvents = () => {
+  // check to see if the client has successfully joined the lobby 
   $socket.on('lobbyJoined', (data) => {
     console.log('joined lobby' + data)
   })
+
+  // check to see if the client has successfully exited the lobby
   $socket.on('lobbyLeft', () => {
     console.log('left lobby')
   })
 
+  // check to see if the client has found a game. If yes, emit an event to join the game
   $socket.on('gameFound', (data) => {
     matchmakingText.value = 'Game Found'
     $socket.emit('joinGame', { id: store.getCurrentPlayer, gameId: data.gameId })
   })
 
+  // check to see if the client has joined the game. If yes, set the game id into the store. 
   $socket.on('gameJoined', (data) => {
+
+    // set the game id to the store.
     store.setGameId(data.gameId)
-    
+
+    // Getting the player ready to join into the game. 
     setInterval(() => {
       if (joiningGameIn.value > 0) {
         matchmakingText.value = `Joining game in ${joiningGameIn.value}...`
@@ -92,13 +120,22 @@ if ($socket && $socket.connected) {
       }
     }, 1000)
   })
+}
+// SOCKET EVENTS ENDS
 
+
+// REGISTER SOCKET EVENTS IF THE SOCKET IS CONNECTED
+if ($socket && $socket.connected) {
+  console.log('connected')
+  socketEvents()
 } else {
   console.log('not connected')
 }
 
-const getData = async () => {
-  const data = await $fetch('/api/Clubs/getClubs')
-  console.log(data)
-}
+
+
+// const getData = async () => {
+//   const data = await $fetch('/api/Clubs/getClubs')
+//   console.log(data)
+// }
 </script>
