@@ -3,23 +3,23 @@
     <div class="container flex flex-col justify-center items-center gap-20 mx-auto">
       <logo-name class="font-black text-6xl" foe-color="blue"></logo-name>
       <div class="flex flex-col justify-center items-center gap-12 text-center text-3xl">
-        <base-card :background-back="backgroundBack" :background-front="backgroundFront" cursor="cursor-pointer"
-          :group-hover=true group-name="group"> INSTRUCTIONS </base-card>
-        <base-card :background-back="backgroundBack" :background-front="backgroundFront" cursor="cursor-pointer"
-          :group-hover=true group-name="group" @click="findAGame()"> PLAY ONLINE
+        <base-card background-back="lightWhite" background-front="blue" cursor="cursor-pointer"
+          :group-hover=true group-name="group" :grounded=false> INSTRUCTIONS </base-card>
+        <base-card background-back="lightWhite" background-front="blue" cursor="cursor-pointer"
+          :group-hover=true group-name="group" :grounded=false @click="findAGame()"> PLAY ONLINE
         </base-card>
       </div>
     </div>
   </div>
   <div v-if="searching">
     <div class="fixed top-0 left-0 w-full h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
-      <base-card class="py-7 px-20" :background-back="backgroundBack" :background-front="backgroundFront" cursor="cursor-default"
-        :groupHover="false" groupName="card">
+      <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue"
+        cursor="cursor-default" :groupHover="false" groupName="card" :grounded=false>
         <div class="flex flex-col justify-center items-center gap-14">
           <div class="text-3xl font-bold text-center"> {{ matchmakingText }} </div>
           <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green" v-if="searching"></div>
-          <base-card class="px-8 text-xl" :background-back="backgroundBack" background-front="bg-green" :groupHover="true" groupName="group"
-            @click="cancelSearch()"> CANCEL
+          <base-card class="px-8 text-xl" background-back="lightWhite" background-front="green" :groupHover="true"
+            groupName="group" :grounded=false @click="cancelSearch()"> CANCEL
           </base-card>
         </div>
       </base-card>
@@ -39,9 +39,6 @@ const $router = useRouter();
 // registering plugins
 const { $socket } = useNuxtApp()
 
-//refs for card props
-const backgroundFront = ref('bg-blue')
-const backgroundBack = ref('bg-lightWhite')
 
 // refs for matchmaking
 const matchmakingText = ref('FINDING A GAME')

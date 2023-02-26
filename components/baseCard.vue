@@ -1,9 +1,9 @@
 <template>
         <div class="px-5 py-4 text-lightBlack rounded-md outline outline-2 outline-lightBlack relative"
-            :class="[backgroundBack, cursor, groupName]">
+            :class="[backgroundBack ? `bg-${backgroundBack}` : '', cursor, groupName]">
             <slot></slot>
-            <div class="absolute px-5 py-4 h-full w-full -top-3 -left-3 transition-all rounded-md outline outline-2 outline-lightBlack text-center flex justify-center items-center text-lightWhite"
-                :class="[backgroundFront, cursor, groupHover ? translateXdown : '', groupHover ? translateYdown : '' ]">
+            <div class="absolute px-5 py-4 h-full w-full transition-all rounded-md outline outline-2 outline-lightBlack text-center flex justify-center items-center text-lightWhite"
+                :class="[backgroundFront ? `bg-${backgroundFront}` : '', cursor, !grounded ? translateXup : '', !grounded ? translateYleft : '', groupHover ? translateXdown : '', groupHover ? translateYright : '' ]">
                 <slot></slot>
             </div>
         </div>
@@ -32,17 +32,18 @@ const props = defineProps({
     groupHover: {
         type: Boolean,
         default: false
+    },
+    grounded: {
+        type: Boolean,
+        required: true,
+        default: false
     }
 })
 
+const translateXup = `-top-3`
+const translateYleft = `-left-3`
 const translateXdown = `${props.groupName}-hover:top-0`
-const translateYdown = `${props.groupName}-hover:left-0`
-
-// watch(() => props.groupHover, (current, previous) => {
-//     if (current) {
-        
-//     }
-// })
+const translateYright = `${props.groupName}-hover:left-0`
 
 </script>
 

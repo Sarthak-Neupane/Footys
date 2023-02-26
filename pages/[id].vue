@@ -23,8 +23,10 @@
       class="container md:py-5 sm:w-3/4 md:w-4/5 lg:w-4/6 my-0 mx-auto h-full flex flex-col justify-start items-center">
       <div class="w-full px-6 flex flex-col md:flex-row justify-center items-center gap-7 md:gap-12">
         <div class="w-full flex flex-col justify-center items-center gap-8 md:gap-12">
-          <grid :gridAnswers="gridAnswers" :columnClubs="columnClubs" :rowClubs="rowClubs" :currentAnswer="currentAnswer"
-            :gameEnd="gameEnd" :resetGrid="resetGrid" @player-guess="sendGuessToStore" @game-ended="gameEnded"></grid>
+          <new-grid :gridAnswers="gridAnswers" :columnClubs="columnClubs" :rowClubs="rowClubs" :currentAnswer="currentAnswer"
+            :gameEnd="gameEnd" :resetGrid="resetGrid" @player-guess="sendGuessToStore" @game-ended="gameEnded"></new-grid>
+          <!-- <grid :gridAnswers="gridAnswers" :columnClubs="columnClubs" :rowClubs="rowClubs" :currentAnswer="currentAnswer"
+            :gameEnd="gameEnd" :resetGrid="resetGrid" @player-guess="sendGuessToStore" @game-ended="gameEnded"></grid> -->
           <transition name="fade" mode="out-in" appear>
             <div class="relative w-full md:w-full flex justify-center items-center" v-if="!gameEnd">
               <SearchBar @submit-answer="sendGuessToEmit" v-if="playerTurn" />
@@ -39,13 +41,13 @@
             <div class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full" v-if="!gameEnd">
               <Transition name="earlyFade" mode="out-in">
                 <div class="w-full flex justify-center items-center gap-10" v-if="playerTurn">
-                  <base-card background-back="bg-lightWhite" :background-front="backgroundFrontPlayer"
-                    cursor="cursor-default" :group-hover=false group-name="card"> YOUR PLAY </base-card>
+                  <base-card background-back="bg-lightWhite" :background-front="getPlayerColor"
+                    cursor="cursor-default" :group-hover=false group-name="card" :grounded=false> YOUR PLAY </base-card>
                 </div>
 
                 <div class="w-full flex justify-center items-center gap-10" v-else>
-                  <base-card background-back="bg-lightWhite" :background-front="backgroundFrontOpponent"
-                    cursor="cursor-default" :group-hover=false group-name="card"> OPPONENT PLAY </base-card>
+                  <base-card background-back="bg-lightWhite" :background-front="getOpponentColor"
+                    cursor="cursor-default" :group-hover=false group-name="card" :grounded=false> OPPONENT PLAY </base-card>
                 </div>
               </Transition>
               <div class="relative h-20 w-20 flex justify-center items-center">
@@ -131,10 +133,6 @@ const matchmakingText = ref('Finding a game...')
 const searching = ref(null)
 const joiningGameIn = ref(3)
 const resetGrid = ref(false)
-
-// refs for background colors for the player and opponent cards
-const backgroundFrontPlayer = `bg-${getPlayerColor.value}`
-const backgroundFrontOpponent = `bg-${getOpponentColor.value}`
 
 
 // REGISTERING REFS ENDS ---------
