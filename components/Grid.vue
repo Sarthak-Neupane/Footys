@@ -1,28 +1,58 @@
 <template>
-    <div class="grid grid-cols-4 grid-rows-4 content-center items-center w-full">
+    <div class="grid grid-cols-4 grid-rows-4 content-center items-center w-full" ref="grid">
         <div class="tile outerCell"></div>
         <div class="tile outerCell">{{ rowClubs[0].name }}</div>
         <div class="tile outerCell">{{ rowClubs[1].name }}</div>
         <div class="tile outerCell ">{{ rowClubs[2].name }}</div>
         <div class="tile outerCell"> {{ columnClubs[0].name }} </div>
-        <div class="tile innerCell border-2" data-grid="[1,1]" data-number="8" ref="OneByOne"></div>
-        <div class="tile innerCell  border-2 border-l-0 bg-none" data-grid="[1,2]" data-number="1" ref="OneByTwo"></div>
-        <div class="tile innerCell border-2 border-l-0" data-grid="[1,3]" data-number="6" ref="OneByThree"></div>
+
+        <div class="tile innerCell relative " data-grid="[1,1]" data-number="8" ref="OneByOne">
+            <div class=" absolute border-2 border-solid border-lightBlack h-full w-full bg-lightWhite "> </div>
+            <div class="h-full w-full bg-lightBlack top-0 left-0"></div>
+        </div>
+
+        <div class="tile innerCell relative" data-grid="[1,2]" data-number="1" ref="OneByTwo">
+            <div class=" absolute border-2 border-solid border-lightBlack h-full w-full bg-lightWhite"> </div>
+            <div class="h-full w-full bg-lightBlack top-0 left-0"></div>
+        </div>
+
+        <div class="tile innerCell relative" data-grid="[1,3]" data-number="6" ref="OneByThree">
+            <div class=" absolute border-2 border-solid border-lightBlack h-full w-full bg-lightWhite"> </div>
+            <div class="h-full w-full bg-lightBlack top-0 left-0"></div>
+        </div>
         <div class="tile outerCell">{{ columnClubs[1].name }}</div>
-        <div class="tile innerCell border-2 border-t-0" data-grid="[2,1]" data-number="3" ref="TwoByOne"></div>
-        <div class="tile innerCell border-2 border-l-0 border-t-0" data-grid="[2,2]" data-number="5" ref="TwoByTwo"></div>
-        <div class="tile innerCell border-2 border-l-0 border-t-0" data-grid="[2,3]" data-number="7" ref="TwoByThree"></div>
+        <div class="tile innerCell relative" data-grid="[2,1]" data-number="3" ref="TwoByOne">
+            <div class=" absolute border-2 border-solid border-lightBlack h-full w-full bg-lightWhite"> </div>
+            <div class="h-full w-full bg-lightBlack top-0 left-0"></div>
+        </div>
+        <div class="tile innerCell relative" data-grid="[2,2]" data-number="5" ref="TwoByTwo">
+            <div class=" absolute border-2 border-solid border-lightBlack h-full w-full bg-lightWhite"> </div>
+            <div class="h-full w-full bg-lightBlack top-0 left-0"></div>
+        </div>
+        <div class="tile innerCell relative" data-grid="[2,3]" data-number="7" ref="TwoByThree">
+            <div class=" absolute border-2 border-solid border-lightBlack h-full w-full bg-lightWhite"> </div>
+            <div class="h-full w-full bg-lightBlack top-0 left-0"></div>
+        </div>
         <div class="tile outerCell">{{ columnClubs[2].name }}</div>
-        <div class="tile innerCell border-2 border-t-0" data-grid="[3,1]" data-number="4" ref="ThreeByOne"></div>
-        <div class="tile innerCell border-2 border-l-0 border-t-0" data-grid="[3,2]" data-number="9" ref="ThreeByTwo"></div>
-        <div class="tile innerCell border-2 border-l-0 border-t-0" data-grid="[3,3]" data-number="2" ref="ThreeByThree"></div>
+        <div class="tile innerCell relative" data-grid="[3,1]" data-number="4" ref="ThreeByOne">
+            <div class=" absolute border-2 border-solid border-lightBlack h-full w-full bg-lightWhite"> </div>
+            <div class="h-full w-full bg-lightBlack top-0 left-0"></div>
+        </div>
+        <div class="tile innerCell relative" data-grid="[3,2]" data-number="9" ref="ThreeByTwo">
+            <div class=" absolute border-2 border-solid border-lightBlack h-full w-full bg-lightWhite"> </div>
+            <div class="h-full w-full bg-lightBlack top-0 left-0"></div>
+        </div>
+        <div class="tile innerCell relative" data-grid="[3,3]" data-number="2" ref="ThreeByThree">
+            <div class=" absolute border-2 border-solid border-lightBlack h-full w-full bg-lightWhite"> </div>
+            <div class="h-full w-full bg-lightBlack top-0 left-0"></div>
+        </div>
     </div>
 </template>
 
 
 <script setup>
 import { useGameStore } from '@/store/';
-import { storeToRefs } from 'pinia';
+import gsap from 'gsap';
 
 const store = useGameStore();
 
@@ -42,23 +72,26 @@ const opponentIndexes = ref([])
 const occupiedIndexes = ref([])
 const isCorrect = ref(null)
 
+// gsap refs
+const ctx = ref()
+const grid = ref()
 
 watch(() => props.currentAnswer, (currentGuess, previousGuess) => {
     checkAnswer(currentGuess)
 });
 
-watch(()=> props.resetGrid, (currentGuess, previousGuess) => {
-    grids.forEach((grid) => {
-        if(grid.value.classList.contains('bg-green')) {
-            grid.value.classList.remove('bg-green')
-        } else if(grid.value.classList.contains('bg-blue')) {
-            grid.value.classList.remove('bg-blue')
-        }
-    })
-    playerIndexes.value = []
-    opponentIndexes.value = []
-    occupiedIndexes.value = []
-});
+// watch(()=> props.resetGrid, (currentGuess, previousGuess) => {
+    // grids.forEach((grid) => {
+    //     if(grid.value.classList.contains('bg-green')) {
+    //         grid.value.classList.remove('bg-green')
+    //     } else if(grid.value.classList.contains('bg-blue')) {
+    //         grid.value.classList.remove('bg-blue')
+    //     }
+    // })
+    // playerIndexes.value = []
+    // opponentIndexes.value = []
+    // occupiedIndexes.value = []
+// });
 
 
 const OneByOne = ref(null)
@@ -91,7 +124,6 @@ const checkAnswer = (answer) => {
         for (let e of elem) {
             if (e.id === answer.id) {
                 occupiedIndexes.value.push(ind)
-                // console.log(occupiedIndexes.value)
                 if(answer.playerId === localStorage.getItem('id')) {
                     playerIndexes.value.push(Number(grids[ind].value.dataset.number))
                     const winner = checkWinner(playerIndexes.value, playerIndexes.value.length, 15)
@@ -105,7 +137,13 @@ const checkAnswer = (answer) => {
                             isDraw: true
                         })
                     }
-                    grids[ind].value.classList.add(`bg-${store.getPlayerColor}`)
+                    gsap.to(grids[ind].value.firstElementChild, {
+                        duration: 0.5,
+                        top: '-5px',
+                        left: '-5px',
+                        backgroundColor: store.getPlayerColor === 'blue' ? '#6B59D6' : '#82AF81',
+                        ease: 'power2.inOut',
+                    })
                 } else {
                     opponentIndexes.value.push(Number(grids[ind].value.dataset.number))
                     const winner = checkWinner(opponentIndexes.value, opponentIndexes.value.length, 15)
@@ -120,7 +158,13 @@ const checkAnswer = (answer) => {
                             isDraw: true
                         })
                     }
-                    grids[ind].value.classList.add(`bg-${store.getOpponentColor}`)
+                    gsap.to(grids[ind].value.firstElementChild, {
+                        duration: 0.5,
+                        top: '-5px',
+                        left: '-5px',
+                        backgroundColor: store.getOpponentColor === 'green' ? '#82AF81' : '#6B59D6',
+                        ease: 'power2.inOut',
+                    })
                 }
                 isCorrect.value = true
                 break outerloop
@@ -159,20 +203,21 @@ const checkWinner = (A, arr_size, sum)=>{
         }
         return false;
 }
+
 </script>
 
 
 <style scoped>
 .tile {
-    @apply flex flex-col justify-center items-center aspect-square text-sm sm:text-sm md:text-base transition duration-500 ease-in-out delay-150
+    @apply flex flex-col justify-center items-center flex-wrap aspect-square text-sm sm:text-sm md:text-base transition duration-500 ease-in-out delay-150
 }
 
 .innerCell {
-    @apply border-solid border-lightBlack
+    @apply outline outline-lightBlack outline-2
 }
 
 .outerCell {
-    @apply px-2 sm:text-xs md:text-sm lg:text-base text-center
+    @apply text-[11px]  sm:text-xs md:text-sm lg:text-base text-center
 }
 
 </style>

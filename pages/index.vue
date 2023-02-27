@@ -51,6 +51,7 @@ const lobbyRoom = ref(null)
 
 // set the player id if it doesn't exist
 onBeforeMount(async () => {
+  store.resetGame()
   if (localStorage.getItem('id') === null) {
     localStorage.setItem('id', uuidv4())
   }

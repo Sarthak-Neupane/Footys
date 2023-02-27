@@ -1,14 +1,16 @@
 <template>
   <div v-if="searching">
     <div class="fixed top-0 left-0 w-full h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
-      <div
-        class="flex flex-col justify-center items-center bg-darkWhite gap-8 py-8 px-7 rounded-md border-2 border-solid border-x-green border-y-blue">
-        <div class="text-3xl font-bold text-center"> {{ matchmakingText }} </div>
-        <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green" v-if="searching"></div>
-        <base-button class="bg-none text-lightBlack font-medium border-solid border-blue border-2 rounded-lg w-60 py-2"
-          @click="cancelSearch()">
-          Cancel </base-button>
-      </div>
+      <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue"
+        cursor="cursor-default" :groupHover="false" groupName="card" :grounded=false>
+        <div class="flex flex-col justify-center items-center gap-14">
+          <div class="text-3xl font-bold text-center"> {{ matchmakingText }} </div>
+          <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green" v-if="searching"></div>
+          <base-card class="px-8 text-xl" background-back="lightWhite" background-front="green" :groupHover="true"
+            groupName="group" :grounded=false @click="cancelSearch()"> CANCEL
+          </base-card>
+        </div>
+      </base-card>
     </div>
   </div>
   <div v-if="gameNotStarted"> Game Starts In {{ gameStartsIn }} </div>
@@ -23,10 +25,8 @@
       class="container md:py-5 sm:w-3/4 md:w-4/5 lg:w-4/6 my-0 mx-auto h-full flex flex-col justify-start items-center">
       <div class="w-full px-6 flex flex-col md:flex-row justify-center items-center gap-7 md:gap-12">
         <div class="w-full flex flex-col justify-center items-center gap-8 md:gap-12">
-          <new-grid :gridAnswers="gridAnswers" :columnClubs="columnClubs" :rowClubs="rowClubs" :currentAnswer="currentAnswer"
-            :gameEnd="gameEnd" :resetGrid="resetGrid" @player-guess="sendGuessToStore" @game-ended="gameEnded"></new-grid>
-          <!-- <grid :gridAnswers="gridAnswers" :columnClubs="columnClubs" :rowClubs="rowClubs" :currentAnswer="currentAnswer"
-            :gameEnd="gameEnd" :resetGrid="resetGrid" @player-guess="sendGuessToStore" @game-ended="gameEnded"></grid> -->
+          <Grid :gridAnswers="gridAnswers" :columnClubs="columnClubs" :rowClubs="rowClubs" :currentAnswer="currentAnswer"
+            :gameEnd="gameEnd" :resetGrid="resetGrid" @player-guess="sendGuessToStore" @game-ended="gameEnded"></Grid>
           <transition name="fade" mode="out-in" appear>
             <div class="relative w-full md:w-full flex justify-center items-center" v-if="!gameEnd">
               <SearchBar @submit-answer="sendGuessToEmit" v-if="playerTurn" />
@@ -56,8 +56,8 @@
             </div>
             <div class="result" v-else>
               <h1 class="font-black text-center text-4xl lg:text-6xl" v-if="gameResult != 'draw'">
-                <span :class="winner === player ? `text-${getPlayerColor}` : 'text-lightBlack'"> YOU </span><span
-                  :class="winner === player ? `text-${getPlayerColor}` : 'text-lightBlack'">{{ winner === player ? 'WIN' :
+                <span :class="returnClass"> YOU </span><span
+                  :class="returnClass">{{ isWinner ? 'WIN' :
                     'LOSE'
                   }}</span>
               </h1>
@@ -177,6 +177,25 @@ watch(joiningGameIn, (current, previous) => {
 })
 
 // WATCHERS END --------------------------------------------------
+
+
+// COMPUTED STARTS -----------------------------------------------
+
+  // computed to check if the player is the winner
+  const isWinner = computed(() => {
+    return winner.value === player.value
+  })
+
+  // computed to return the player color class name
+  const returnClass = computed(() => {
+    if(isWinner) {
+      return `text-${getPlayerColor.value}`
+    } else {
+      return 'text-lightBlack'
+    }
+  })
+
+// COMPUTED ENDS -------------------------------------------------
 
 // METHODS STARTS -------------------------------------------------
 

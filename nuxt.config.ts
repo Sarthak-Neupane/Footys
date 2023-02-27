@@ -30,5 +30,9 @@ export default defineNuxtConfig({
     ],
   },
 
+  build: {
+    transpile: ['gsap'],
+  },
+
   css: ["~/assets/fonts/Audiowide.css"],
 });
