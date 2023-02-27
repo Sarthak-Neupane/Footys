@@ -139,7 +139,7 @@ export default async _nitroApp => {
   const guess = (socket, data) => {
     socket.to(data.gameId).emit('guess', {
       guess: data.guess,
-      player: data.id
+      player: data.id,
     })
   }
 

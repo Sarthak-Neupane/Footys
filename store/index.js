@@ -88,16 +88,13 @@ export const useGameStore = defineStore('game', () => {
     timer.value = 20
     intervalId.value = setInterval(() => {
       timer.value--
-      if (timer.value === 0) {
-        clearInterval(intervalId.value)
-      }
     }, 1000)
-    console.log(`this is for instantiate ${intervalId.value}`)
+    console.log('this is initialization of', intervalId.value)
   }
 
   const resetTimer = () => {
     timer.value = 20
-    console.log(`this is for clearance ${intervalId.value}`)
+    console.log('this is clearance of', intervalId.value)
     clearInterval(intervalId.value)
   }
 

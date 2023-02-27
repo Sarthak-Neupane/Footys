@@ -56,7 +56,7 @@ const checkTyping = async () => {
 const submitAnswer = (e) => {
     players.value.forEach((elem) => {
         if (elem._id === e.target.dataset.id) {
-            emit('submitAnswer', elem)
+            emit('submitAnswer', {...elem, isEmpty: false})
             players.value = []
             searchValue.value = ''
             labelInput.value = "Search Player";

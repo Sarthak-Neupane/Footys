@@ -1,13 +1,13 @@
 <template>
   <div v-if="searching">
     <div class="fixed top-0 left-0 w-full h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
-      <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue"
-        cursor="cursor-default" :groupHover="false" groupName="card" :grounded=false>
+      <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue" cursor="cursor-default"
+        :groupHover="false" groupName="card" :grounded=false>
         <div class="flex flex-col justify-center items-center gap-14">
           <div class="text-3xl font-bold text-center"> {{ matchmakingText }} </div>
-          <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green" v-if="searching"></div>
+          <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green"></div>
           <base-card class="px-8 text-xl" background-back="lightWhite" background-front="green" :groupHover="true"
-            groupName="group" :grounded=false @click="cancelSearch()"> CANCEL
+            groupName="group" :grounded=false @click="cancelSearch()" v-if="!gameFound"> CANCEL
           </base-card>
         </div>
       </base-card>
@@ -41,13 +41,13 @@
             <div class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full" v-if="!gameEnd">
               <Transition name="earlyFade" mode="out-in">
                 <div class="w-full flex justify-center items-center gap-10" v-if="playerTurn">
-                  <base-card background-back="bg-lightWhite" :background-front="getPlayerColor"
-                    cursor="cursor-default" :group-hover=false group-name="card" :grounded=false> YOUR PLAY </base-card>
+                  <base-card background-back="bg-lightWhite" :background-front="getPlayerColor" cursor="cursor-default"
+                    :group-hover=false group-name="card" :grounded=false> YOUR PLAY </base-card>
                 </div>
 
                 <div class="w-full flex justify-center items-center gap-10" v-else>
-                  <base-card background-back="bg-lightWhite" :background-front="getOpponentColor"
-                    cursor="cursor-default" :group-hover=false group-name="card" :grounded=false> OPPONENT PLAY </base-card>
+                  <base-card background-back="bg-lightWhite" :background-front="getOpponentColor" cursor="cursor-default"
+                    :group-hover=false group-name="card" :grounded=false> OPPONENT PLAY </base-card>
                 </div>
               </Transition>
               <div class="relative h-20 w-20 flex justify-center items-center">
@@ -56,10 +56,9 @@
             </div>
             <div class="result" v-else>
               <h1 class="font-black text-center text-4xl lg:text-6xl" v-if="gameResult != 'draw'">
-                <span :class="returnClass"> YOU </span><span
-                  :class="returnClass">{{ isWinner ? 'WIN' :
-                    'LOSE'
-                  }}</span>
+                <span :class="returnClass"> YOU </span><span :class="returnClass">{{ isWinner ? 'WIN' :
+                  'LOSE'
+                }}</span>
               </h1>
               <h1 class="font-black text-center text-4xl lg:text-6xl" v-else>
                 <span class="text-lightBlack"> Oops! YOU DREW </span>
@@ -93,6 +92,7 @@ const interval = setInterval(() => {
     gameStartsIn.value--
   } else {
     gameNotStarted.value = false
+    store.startTimer()
     clearInterval(interval)
   }
 }, 1000)
@@ -135,8 +135,10 @@ const canvas = ref(null)
 // refs for the new game event
 const matchmakingText = ref('Finding a game...')
 const searching = ref(null)
+const gameFound = ref(false)
 const joiningGameIn = ref(3)
 const resetGrid = ref(false)
+const timeout = ref(0)
 
 
 // REGISTERING REFS ENDS ---------
@@ -158,56 +160,46 @@ onBeforeMount(() => {
     player.value = uuidv4()
     localStorage.setItem('id', player.value)
   }
-})
-
-onMounted(()=>{
+  // store.resetGame()
   $socket.emit('gameStart', { id: player.value, gameId: store.gameId })
 })
+
+// onMounted(() => {
+// })
+
 // LIFECYCLE HOOKS ENDS -----------------------------------------
 
 // WATCHERS START ------------------------------------------------
 
-// watcher to check if the countdown is finished and game can be started
-// watch(gameStartsIn, (current, previous) => {
-//   if (current === 0) {
-//     // emit socket event to start the game.
-//     // $socket.emit('gameStart', { id: player.value, gameId: store.gameId })
-//   }
-// })
-
-// watcher to check the countdown for joining a new game
-watch(joiningGameIn, (current, previous) => {
-  if (current === 0) {
-    resetGrid.value = true
-    $router.push(`/${store.gameId}`)
+// watcher to check if the current turn is over 
+watch(getTimer, (current, previous) => {
+  if (current === 0 && playerTurn.value) {
+    console.log('turn over')
+    store.resetTimer()
+    sendGuessToEmit({
+      isEmpty: true,
+    })
   }
 })
-
-// watcher to check if the current turn is over 
-  watch(getTimer, (current, previous) => {
-    if (current === 0) {
-      sendGuessToEmit({})
-    }
-  })
 
 // WATCHERS END --------------------------------------------------
 
 
 // COMPUTED STARTS -----------------------------------------------
 
-  // computed to check if the player is the winner
-  const isWinner = computed(() => {
-    return winner.value === player.value
-  })
+// computed to check if the player is the winner
+const isWinner = computed(() => {
+  return winner.value === player.value
+})
 
-  // computed to return the player color class name
-  const returnClass = computed(() => {
-    if(isWinner) {
-      return `text-${getPlayerColor.value}`
-    } else {
-      return 'text-lightBlack'
-    }
-  })
+// computed to return the player color class name
+const returnClass = computed(() => {
+  if (isWinner) {
+    return `text-${getPlayerColor.value}`
+  } else {
+    return 'text-lightBlack'
+  }
+})
 
 // COMPUTED ENDS -------------------------------------------------
 
@@ -216,35 +208,42 @@ watch(joiningGameIn, (current, previous) => {
 // send the guess to server and grid. After the 'submit-answer' event is emitted by the searchBar component
 const sendGuessToEmit = (e) => {
 
-
-  // emitting a guess event to server and sending the current game, along with the player
-  $socket.emit('guess', { guess: e, id: player.value, gameId: store.gameId })
-
   // setting the current answer to the current guess, so that the grid component gets the new answer
-
   currentAnswer.value = {
     ...e,
     'playerId': player.value
   }
+
+  // emitting a guess event to server and sending the current guess, along with the player id
+  $socket.emit('guess', {
+    guess: {
+      ...e,
+    }, id: player.value, gameId: store.gameId
+  })
 }
 
 // sending the current guess to store after the grid completes checking the answer and emits a 'player-guess' events
 const sendGuessToStore = (e) => {
-    if (e.playerId === player.value) {
-      // add to player guess
-      store.addPlayerGuess(e)
-    } else {
-      // add to opponent guess
-      store.addOpponentGuess(e)
-    }
-    // change the player turn in the localstate 
-    // store.changePlayerTurn()
-    $socket.emit('changeTurn', { id: player.value, gameId: store.gameId })
-  
+  if (e.playerId === player.value) {
+    // add to player guess
+    console.log('adding to player guess')
+    store.addPlayerGuess(e)
+  } else {
+    // add to opponent guess
+    console.log('adding to opponent guess')
+    store.addOpponentGuess(e)
+  }
+
+  // change the player turn in the localstate 
+  store.resetTimer()
+  store.changePlayerTurn()
+  store.startTimer()
+  $socket.emit('changeTurn', { id: player.value, gameId: store.gameId })
 }
 
 // emit event 'gameDecided' to the server after 'grid' component emits the 'game-ended' event
 const gameEnded = (e) => {
+  store.resetTimer()
   if (e.isDraw === true) {
     $socket.emit('gameDecided', { winner: null, gameId: store.gameId })
   } else {
@@ -256,12 +255,15 @@ const gameEnded = (e) => {
 // Search for a new game
 const startNewGame = () => {
   searching.value = true  // make the player know that they are searching for a game
+  gameFound.value = false  // make the player know that they have not found a game yet
   $socket.emit('leaveRoom', { id: player.value, gameId: store.gameId })  // leave the current room
 }
 
 // Cancel the search of a new game
 const cancelSearch = () => {
   searching.value = false;
+  gameFound.value = false;
+  clearTimeout(timeout.value)
   $socket.emit('leaveLobby', { id: store.getCurrentPlayer })  // leave the lobby
 }
 // PLAY AGAIN METHODS ENDS -----------------
@@ -282,24 +284,27 @@ const socketEvents = () => {
       store.setInitialPlayerTurn(false)
       store.setPlayerColor(e.color2)
     }
-    // gameNotStarted.value = false
   })
 
   // send the current answer to the grid component is the server emits a 'guess' event
   $socket.on('guess', (data) => {
+    // store.resetTimer()
     currentAnswer.value = {
       ...data.guess,
-      'playerId': data.player
+      'playerId': data.player,
     }
   })
 
   // change the current turn if the server emits a 'changeTurn' event
   $socket.on('changeTurn', (e) => {
     store.changePlayerTurn(e)
+    store.resetTimer()
+    store.startTimer()
   })
 
   // check if the 'gameDecided is emitted by the server'
   $socket.on('gameDecided', (e) => {
+    store.resetTimer()
     // check if the game has a winner
     if (e.winner) {
       // If Yes...
@@ -325,8 +330,11 @@ const socketEvents = () => {
 
   // Check if the player has left the current room
   $socket.on('roomLeft', (e) => {
-    store.resetGame()         // reset the store
-    $socket.emit('joinLobby', { id: store.getCurrentPlayer })    // join the lobby after exiting the room
+    gameFound.value = false
+    const delayTime = setTimeout(() => {
+      $socket.emit('joinLobby', { id: store.getCurrentPlayer })    // join the lobby after exiting the room
+  }, 1000)
+  timeout.value = delayTime
   })
 
   // Check if the player joined the lobby
@@ -339,29 +347,44 @@ const socketEvents = () => {
     console.log('left lobby')
   })
 
-  // Check if the player found a new game
+  // check to see if the client has found a game. If yes, emit an event to join the game
   $socket.on('gameFound', (data) => {
-    matchmakingText.value = 'Game Found'  // set the matchmaking value
-
-    // emit a 'joinGame' event to the server to join the game that was found
-    $socket.emit('joinGame', { id: store.getCurrentPlayer, gameId: data.gameId })
+    if (data.players.includes(store.getCurrentSocketId)) {
+      matchmakingText.value = 'Game Found'
+      gameFound.value = true
+      store.resetGame()
+      $socket.emit('joinGame', { id: store.getCurrentPlayer, gameId: data.gameId })
+    }
   })
 
   // Check if the player has joined the game
+  // check to see if the client has joined the game. If yes, set the game id into the store. 
   $socket.on('gameJoined', (data) => {
-    store.setGameId(data.gameId)         // set the new game id in to store
 
-    // hardcode a set interval to get the player ready to join the new game
-    setInterval(() => {
-      if (joiningGameIn.value > 0) {
-        matchmakingText.value = `Joining game in ${joiningGameIn.value}...`
-        console.log(`Joining game in ${joiningGameIn.value}...`)
-        joiningGameIn.value--
-      } else {
-        clearInterval()
-      }
-    }, 1000)
+    // set the game id to the store.
+    store.setGameId(data.gameId)
+    matchmakingText.value = `Joining game...`
   })
+
+  $socket.on('bothPlayersJoined', (data) => {
+    if (data.isJoined) {
+
+      const Newinterval = setInterval(() => {
+        if (joiningGameIn.value > 0) {
+          console.log(joiningGameIn.value)
+          matchmakingText.value = `Joining game in ${joiningGameIn.value}...`
+          joiningGameIn.value -= 1
+        } else {
+          clearInterval(Newinterval)
+          joiningGameIn.value = 3
+          $router.push(`/${store.gameId}`)
+        }
+      }, 1000)
+
+    }
+  })
+
+
   // PLAY AGAIN SOCKET EVENTS END ---------------------------------
 }
 // SOCKET EVENTS ENDS ------------------------------------------

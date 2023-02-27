@@ -73,18 +73,18 @@ const occupiedIndexes = ref([])
 const isCorrect = ref(null)
 
 // gsap refs
-const ctx = ref()
 const grid = ref()
 
 watch(() => props.currentAnswer, (currentGuess, previousGuess) => {
-    // Check if the current guess object contains more than 2 keys
-    if( Object.keys(currentGuess).length < 2 ) {
+    if( currentGuess.isEmpty === true ) {
+        console.log('empty guess by' + currentGuess.playerId)
         emit('playerGuess', {
             isEmpty: true,
-            playerId: currentGuess.playerId,
+            'playerId': currentGuess.playerId,
             isCorrect: false,
         })
     } else {
+        console.log('It is not an empty guess by' + currentGuess.playerId)
         checkAnswer(currentGuess)
     }
 });

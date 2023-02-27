@@ -2,14 +2,14 @@
   <div class="w-1/2 border-solid border-r-[0px] border-lightBlack">
     <TransitionGroup name="list" tag="ul" class="w-full flex flex-col justify-start items-start"
       @before-enter="onBeforeEnter">
-      <li v-for="guess in getPlayerGuesses" :key="!guess.isEmpty ? guess._id : 'No Answer' " class="guess" :class="returnPlayerClass(guess)"> {{ !guess.isEmpty ? guess.name : 'N/A'  }} </li>
+      <li v-for="guess in getPlayerGuesses" :key="guess.isEmpty ? 'NoKeyP' : guess._id" class="guess" :class="returnPlayerClass(guess)"> {{ !guess.isEmpty ? guess.name : 'N/A'  }} </li>
     </TransitionGroup>
   </div>
 
   <div class=" w-1/2">
     <TransitionGroup name="list" tag="ul" class="w-full flex flex-col justify-start items-start text-right"
       @before-enter="onBeforeEnter">
-      <li v-for="guess in getOpponentGuesses" :key="!guess.isEmpty ? guess._id : 'No Answer'" class="guess" :class="returnOpponentClass(guess)"> {{ !guess.isEmpty ? guess.name : 'N/A'  }} </li>
+      <li v-for="guess in getOpponentGuesses" :key="guess.isEmpty ? 'NoKeyO' : guess._id" class="guess" :class="returnOpponentClass(guess)"> {{ !guess.isEmpty ? guess.name : 'N/A'  }} </li>
     </TransitionGroup>
   </div>
 </template>

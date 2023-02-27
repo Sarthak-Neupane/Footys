@@ -17,9 +17,9 @@
         :groupHover="false" groupName="card" :grounded=false>
         <div class="flex flex-col justify-center items-center gap-14">
           <div class="text-3xl font-bold text-center"> {{ matchmakingText }} </div>
-          <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green" v-if="searching"></div>
+          <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green"></div>
           <base-card class="px-8 text-xl" background-back="lightWhite" background-front="green" :groupHover="true"
-            groupName="group" :grounded=false @click="cancelSearch()"> CANCEL
+            groupName="group" :grounded=false @click="cancelSearch()" v-if="!gameFound"> CANCEL
           </base-card>
         </div>
       </base-card>
@@ -43,10 +43,10 @@ const { $socket } = useNuxtApp()
 // refs for matchmaking
 const matchmakingText = ref('FINDING A GAME')
 const searching = ref(null)
+const gameFound = ref(null)
 const joiningGameIn = ref(3)
+const timeout = ref(0)
 
-// refs for custom lobby
-const lobbyRoom = ref(null)
 
 
 // set the player id if it doesn't exist
@@ -58,17 +58,22 @@ onBeforeMount(async () => {
   store.setCurrentPlayer(localStorage.getItem('id'))
 })
 
-
 // join the lobby for matchmaking
 const findAGame = () => {
   searching.value = true;
+  gameFound.value = false;
   matchmakingText.value = 'FINDING A GAME'
-  $socket.emit('joinLobby', { id: store.getCurrentPlayer })
+  const delayTime = setTimeout(() => {
+    $socket.emit('joinLobby', { id: store.getCurrentPlayer })
+  }, 1000)
+  timeout.value = delayTime
 }
 
 // leave the lobby to cancel matchmaking
 const cancelSearch = () => {
   searching.value = false;
+  gameFound.value = false;
+  clearTimeout(timeout.value)
   $socket.emit('leaveLobby', { id: store.getCurrentPlayer })
 }
 
@@ -89,6 +94,7 @@ const socketEvents = () => {
   $socket.on('gameFound', (data) => {
     if (data.players.includes(store.getCurrentSocketId)) {
       matchmakingText.value = 'Game Found'
+      gameFound.value = true
       $socket.emit('joinGame', { id: store.getCurrentPlayer, gameId: data.gameId })
     }
   })
@@ -101,8 +107,8 @@ const socketEvents = () => {
     matchmakingText.value = `Joining game...`
 
   })
+
   $socket.on('bothPlayersJoined', (data) => {
-    console.log(data)
     if (data.isJoined) {
 
       const interval = setInterval(() => {
@@ -112,6 +118,7 @@ const socketEvents = () => {
           joiningGameIn.value -= 1
         } else {
           clearInterval(interval)
+          joiningGameIn.value = 3
           $router.push(`/${store.gameId}`)
         }
       }, 1000)
