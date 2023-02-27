@@ -88,11 +88,12 @@ import { useRouter } from 'vue-router';
 const gameNotStarted = ref(true)
 const gameStartsIn = ref(3)
 
-setInterval(() => {
+const interval = setInterval(() => {
   if (gameStartsIn.value > 0) {
     gameStartsIn.value--
   } else {
-    clearInterval()
+    gameNotStarted.value = false
+    clearInterval(interval)
   }
 }, 1000)
 // TEMPORARY END ------------------------------------------------------------------------------------------------------------
@@ -125,6 +126,9 @@ const player = ref(null)
 // instantiate an empty guess. Will be filled later, when the searchBar component emits the guess.
 const currentAnswer = ref({});
 
+// the current timer
+const { getTimer } = storeToRefs(store)
+
 // ref for the confetti canvas
 const canvas = ref(null)
 
@@ -155,18 +159,21 @@ onBeforeMount(() => {
     localStorage.setItem('id', player.value)
   }
 })
+
+onMounted(()=>{
+  $socket.emit('gameStart', { id: player.value, gameId: store.gameId })
+})
 // LIFECYCLE HOOKS ENDS -----------------------------------------
 
 // WATCHERS START ------------------------------------------------
 
 // watcher to check if the countdown is finished and game can be started
-watch(gameStartsIn, (current, previous) => {
-  if (current === 0) {
-    // emit socket event to start the game.
-    $socket.emit('gameStart', { id: player.value, gameId: store.gameId })
-    gameNotStarted.value = false
-  }
-})
+// watch(gameStartsIn, (current, previous) => {
+//   if (current === 0) {
+//     // emit socket event to start the game.
+//     // $socket.emit('gameStart', { id: player.value, gameId: store.gameId })
+//   }
+// })
 
 // watcher to check the countdown for joining a new game
 watch(joiningGameIn, (current, previous) => {
@@ -175,6 +182,13 @@ watch(joiningGameIn, (current, previous) => {
     $router.push(`/${store.gameId}`)
   }
 })
+
+// watcher to check if the current turn is over 
+  watch(getTimer, (current, previous) => {
+    if (current === 0) {
+      sendGuessToEmit({})
+    }
+  })
 
 // WATCHERS END --------------------------------------------------
 
@@ -201,10 +215,13 @@ watch(joiningGameIn, (current, previous) => {
 
 // send the guess to server and grid. After the 'submit-answer' event is emitted by the searchBar component
 const sendGuessToEmit = (e) => {
+
+
   // emitting a guess event to server and sending the current game, along with the player
   $socket.emit('guess', { guess: e, id: player.value, gameId: store.gameId })
 
   // setting the current answer to the current guess, so that the grid component gets the new answer
+
   currentAnswer.value = {
     ...e,
     'playerId': player.value
@@ -213,17 +230,17 @@ const sendGuessToEmit = (e) => {
 
 // sending the current guess to store after the grid completes checking the answer and emits a 'player-guess' events
 const sendGuessToStore = (e) => {
-  // check if the guess is of player or the opponent
-  if (e.playerId === player.value) {
-    // add to player guess
-    store.addPlayerGuess(e)
-  } else {
-    // add to opponent guess
-    store.addOpponentGuess(e)
-  }
-  // change the player turn in the localstate 
-  store.changePlayerTurn()  // --------------------------------------------------------THIS COULD BE REMOVED I GUESS--------
-  $socket.emit('changeTurn', { id: player.value, gameId: store.gameId })
+    if (e.playerId === player.value) {
+      // add to player guess
+      store.addPlayerGuess(e)
+    } else {
+      // add to opponent guess
+      store.addOpponentGuess(e)
+    }
+    // change the player turn in the localstate 
+    // store.changePlayerTurn()
+    $socket.emit('changeTurn', { id: player.value, gameId: store.gameId })
+  
 }
 
 // emit event 'gameDecided' to the server after 'grid' component emits the 'game-ended' event
@@ -265,9 +282,10 @@ const socketEvents = () => {
       store.setInitialPlayerTurn(false)
       store.setPlayerColor(e.color2)
     }
+    // gameNotStarted.value = false
   })
 
-  // send the current answer the the grid component is the server emits a 'guess' event
+  // send the current answer to the grid component is the server emits a 'guess' event
   $socket.on('guess', (data) => {
     currentAnswer.value = {
       ...data.guess,

@@ -77,7 +77,16 @@ const ctx = ref()
 const grid = ref()
 
 watch(() => props.currentAnswer, (currentGuess, previousGuess) => {
-    checkAnswer(currentGuess)
+    // Check if the current guess object contains more than 2 keys
+    if( Object.keys(currentGuess).length < 2 ) {
+        emit('playerGuess', {
+            isEmpty: true,
+            playerId: currentGuess.playerId,
+            isCorrect: false,
+        })
+    } else {
+        checkAnswer(currentGuess)
+    }
 });
 
 // watch(()=> props.resetGrid, (currentGuess, previousGuess) => {

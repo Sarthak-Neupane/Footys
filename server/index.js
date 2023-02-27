@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import express from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
+import { instrument } from '@socket.io/admin-ui'
 import { v4 as uuidv4 } from 'uuid'
 
 const randomNumber = (min, max, exclude) => {
@@ -25,55 +26,66 @@ export default async _nitroApp => {
   const app = express()
   const httpServer = createServer(app)
 
-
+  httpServer.listen(8000)
 
   const io = new Server(httpServer, {
     cors: {
-      origin: ['http://localhost:3000', 'http://localhost:8000']
+      origin: [
+        'https://admin.socket.io',
+        'http://localhost:3000',
+        'http://localhost:8000'
+      ]
     }
+  })
+
+  instrument(io, {
+    auth: false,
+    mode: 'development'
   })
 
   const findGame = () => {
     const clients = io.of('/').adapter.rooms.get('lobby')
-    const numClients = [...clients ? clients : 0]
-      if (numClients.length > 1) {
-        const player1 = numClients[0]
-        const player2 = numClients[1]
-        const gameRoom = uuidv4()
+    const numClients = [...(clients ? clients : 0)]
+    if (numClients.length > 1) {
+      const player1 = numClients[0]
+      const player2 = numClients[1]
+      const gameRoom = uuidv4()
 
-        io.to(player1).emit('gameFound', {
-          gameId: gameRoom,
-          player: numClients[player1],
-          opponent: numClients[player2]
-        })
+      io.to('lobby').emit('gameFound', {
+        gameId: gameRoom,
+        players: numClients
+      })
+    } else {
+      console.log('no game found')
+    }
+  }
 
-        io.to(player2).emit('gameFound', {
-          gameId: gameRoom,
-          playerSocketId: numClients[player2],
-          opponentSocketId: numClients[player1]
-        })
-
-      } else {
-        console.log('no game found')
-      }
+  const checkBothPlayersJoined = (socket, data) => {
+    const clients = io.of('/').adapter.rooms.get(data.gameId)
+    const numClients = [...(clients ? clients : 0)]
+    if (numClients.length === 2) {
+      return true
+    } else {
+      return false
+    }
   }
 
   io.on('connection', socket => {
     console.log(`${socket.id} connected`)
 
-    socket.on('joinLobby', (data) => {
+    socket.on('joinLobby', data => {
       joinLobby(socket, data)
     })
-    socket.on('leaveLobby', (data) => {
+    socket.on('leaveLobby', data => {
       leaveLobby(socket)
     })
     socket.on('findGame', data => {
       findGame(socket, data)
     })
-    socket.on('joinGame', (data)=>{
+    socket.on('joinGame', data => {
       joinGame(socket, data)
     })
-    socket.on('gameStart', (data)=>{
+    socket.on('gameStart', data => {
       gameStart(socket, data)
     })
     socket.on('guess', data => {
@@ -85,7 +97,7 @@ export default async _nitroApp => {
     socket.on('gameDecided', data => {
       gameDecided(socket, data)
     })
-    socket.on('leaveRoom', (data)=>{
+    socket.on('leaveRoom', data => {
       leaveRoom(socket, data)
     })
   })
@@ -94,28 +106,27 @@ export default async _nitroApp => {
     socket.join('lobby')
     io.to(socket.id).emit('lobbyJoined', {
       id: data.id,
-      playerSocketId : socket.id
+      playerSocketId: socket.id
     })
     findGame(socket)
   }
 
-  const leaveLobby = (socket) => {
+  const leaveLobby = socket => {
     socket.leave('lobby')
     io.to(socket.id).emit('lobbyLeft')
   }
 
   const joinGame = (socket, data) => {
     leaveLobby(socket)
-    console.log(data)
     socket.join(data.gameId)
     io.to(data.gameId).emit('gameJoined', {
-      gameId: data.gameId,
+      gameId: data.gameId
     })
   }
 
   const gameStart = (socket, data) => {
     const clients = io.of('/').adapter.rooms.get(data.gameId)
-    const numClients = [...clients ? clients : 0]
+    const numClients = [...(clients ? clients : 0)]
     const number = randomNumber(0, 1, [])
     io.to(data.gameId).emit('startGame', {
       player1: numClients[number],
@@ -155,20 +166,22 @@ export default async _nitroApp => {
     io.to(socket.id).emit('roomLeft', {
       gameId: data.gameId
     })
-    
   }
 
   io.of('/').adapter.on('join-room', (room, id) => {
     if (room === 'lobby') {
+    } else {
       const clients = io.of('/').adapter.rooms.get(room)
       // get the number of clients
       const numClients = [...(clients ? clients : 0)]
-      console.log(numClients.length)
-      numClients.forEach(client => {
-        console.log(client)
-      })
+      // if there are two clients, start a game
+      if (numClients.length === 2) {
+        console.log([...room])
+        io.to(room).emit('bothPlayersJoined', {
+          gameId: room,
+          isJoined: true
+        })
+      }
     }
   })
-
-  httpServer.listen(8000)
 }

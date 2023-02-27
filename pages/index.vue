@@ -3,18 +3,18 @@
     <div class="container flex flex-col justify-center items-center gap-20 mx-auto">
       <logo-name class="font-black text-6xl" foe-color="blue"></logo-name>
       <div class="flex flex-col justify-center items-center gap-12 text-center text-3xl">
-        <base-card background-back="lightWhite" background-front="blue" cursor="cursor-pointer"
-          :group-hover=true group-name="group" :grounded=false> INSTRUCTIONS </base-card>
-        <base-card background-back="lightWhite" background-front="blue" cursor="cursor-pointer"
-          :group-hover=true group-name="group" :grounded=false @click="findAGame()"> PLAY ONLINE
+        <base-card background-back="lightWhite" background-front="blue" cursor="cursor-pointer" :group-hover=true
+          group-name="group" :grounded=false> INSTRUCTIONS </base-card>
+        <base-card background-back="lightWhite" background-front="blue" cursor="cursor-pointer" :group-hover=true
+          group-name="group" :grounded=false @click="findAGame()"> PLAY ONLINE
         </base-card>
       </div>
     </div>
   </div>
   <div v-if="searching">
     <div class="fixed top-0 left-0 w-full h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
-      <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue"
-        cursor="cursor-default" :groupHover="false" groupName="card" :grounded=false>
+      <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue" cursor="cursor-default"
+        :groupHover="false" groupName="card" :grounded=false>
         <div class="flex flex-col justify-center items-center gap-14">
           <div class="text-3xl font-bold text-center"> {{ matchmakingText }} </div>
           <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green" v-if="searching"></div>
@@ -58,12 +58,6 @@ onBeforeMount(async () => {
   store.setCurrentPlayer(localStorage.getItem('id'))
 })
 
-// watcher to check if the player is has succesfully joined a game. If yes, push to the game route
-watch(joiningGameIn, (current, previous) => {
-  if (current === 0) {
-    $router.push(`/${store.gameId}`)
-  }
-})
 
 // join the lobby for matchmaking
 const findAGame = () => {
@@ -78,17 +72,12 @@ const cancelSearch = () => {
   $socket.emit('leaveLobby', { id: store.getCurrentPlayer })
 }
 
-// Create A  Custom Lobby for inviting Friends
-const inviteFriend = () => {
-  lobbyRoom.value = true;
-}
-
-
 // SOCKET EVENTS STARTS
 const socketEvents = () => {
   // check to see if the client has successfully joined the lobby 
   $socket.on('lobbyJoined', (data) => {
     console.log('joined lobby' + data)
+    store.setCurrentSocketId(data.playerSocketId)
   })
 
   // check to see if the client has successfully exited the lobby
@@ -98,8 +87,10 @@ const socketEvents = () => {
 
   // check to see if the client has found a game. If yes, emit an event to join the game
   $socket.on('gameFound', (data) => {
-    matchmakingText.value = 'Game Found'
-    $socket.emit('joinGame', { id: store.getCurrentPlayer, gameId: data.gameId })
+    if (data.players.includes(store.getCurrentSocketId)) {
+      matchmakingText.value = 'Game Found'
+      $socket.emit('joinGame', { id: store.getCurrentPlayer, gameId: data.gameId })
+    }
   })
 
   // check to see if the client has joined the game. If yes, set the game id into the store. 
@@ -107,16 +98,25 @@ const socketEvents = () => {
 
     // set the game id to the store.
     store.setGameId(data.gameId)
+    matchmakingText.value = `Joining game...`
 
-    // Getting the player ready to join into the game. 
-    setInterval(() => {
-      if (joiningGameIn.value > 0) {
-        matchmakingText.value = `Joining game in ${joiningGameIn.value}...`
-        joiningGameIn.value--
-      } else {
-        clearInterval()
-      }
-    }, 1000)
+  })
+  $socket.on('bothPlayersJoined', (data) => {
+    console.log(data)
+    if (data.isJoined) {
+
+      const interval = setInterval(() => {
+        console.log(joiningGameIn.value)
+        if (joiningGameIn.value > 0) {
+          matchmakingText.value = `Joining game in ${joiningGameIn.value}...`
+          joiningGameIn.value -= 1
+        } else {
+          clearInterval(interval)
+          $router.push(`/${store.gameId}`)
+        }
+      }, 1000)
+
+    }
   })
 }
 // SOCKET EVENTS ENDS
@@ -129,6 +129,7 @@ if ($socket && $socket.connected) {
 } else {
   console.log('not connected')
 }
+
 
 
 

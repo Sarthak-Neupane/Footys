@@ -8,11 +8,16 @@ export const useGameStore = defineStore('game', () => {
   const gameResult = ref(false)
   const winner = ref(null)
   const currentPlayer = ref('id')
+  const currentSocketId = ref(null)
   const playerColor = ref(null)
   const opponentColor = ref(null)
   const playerTurn = ref(true)
   const playerGuesses = ref([])
   const opponenetGuesses = ref([])
+
+  const intervalId = ref(null)
+
+  const timer = ref(20)
 
   const setGameId = id => {
     gameId.value = id
@@ -35,6 +40,12 @@ export const useGameStore = defineStore('game', () => {
   })
   const setCurrentPlayer = id => {
     currentPlayer.value = id
+  }
+  const getCurrentSocketId = computed(() => {
+    return currentSocketId.value
+  })
+  const setCurrentSocketId = id => {
+    currentSocketId.value = id
   }
 
   const getPlayerColor = computed(() => {
@@ -69,6 +80,28 @@ export const useGameStore = defineStore('game', () => {
     opponenetGuesses.value.push(guess)
   }
 
+  const getTimer = computed(() => {
+    return timer.value
+  })
+
+  const startTimer = () => {
+    timer.value = 20
+    intervalId.value = setInterval(() => {
+      timer.value--
+      if (timer.value === 0) {
+        clearInterval(intervalId.value)
+      }
+    }, 1000)
+    console.log(`this is for instantiate ${intervalId.value}`)
+  }
+
+  const resetTimer = () => {
+    timer.value = 20
+    console.log(`this is for clearance ${intervalId.value}`)
+    clearInterval(intervalId.value)
+  }
+
+
   const resetGame = () => {
     gameId.value = null
     gameEnd.value = false
@@ -80,6 +113,8 @@ export const useGameStore = defineStore('game', () => {
     playerTurn.value = true
     playerGuesses.value = []
     opponenetGuesses.value = []
+    timer.value = 20
+    clearInterval(intervalId.value)
   }
 
   return {
@@ -93,6 +128,8 @@ export const useGameStore = defineStore('game', () => {
     setWinner,
     getCurrentPlayer,
     setCurrentPlayer,
+    getCurrentSocketId,
+    setCurrentSocketId,
     getPlayerColor,
     getOpponentColor,
     setPlayerColor,
@@ -103,6 +140,9 @@ export const useGameStore = defineStore('game', () => {
     addPlayerGuess,
     getOpponentGuesses,
     addOpponentGuess,
+    getTimer,
+    startTimer,
+    resetTimer,
     resetGame
   }
 })
