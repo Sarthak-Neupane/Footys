@@ -102,8 +102,7 @@ const socketEvents = () => {
   // check to see if the client has joined the game. If yes, set the game id into the store. 
   $socket.on('gameJoined', (data) => {
 
-    // set the game id to the store.
-    store.setGameId(data.gameId)
+
     matchmakingText.value = `Joining game...`
 
   })
@@ -112,14 +111,15 @@ const socketEvents = () => {
     if (data.isJoined) {
 
       const interval = setInterval(() => {
-        console.log(joiningGameIn.value)
         if (joiningGameIn.value > 0) {
           matchmakingText.value = `Joining game in ${joiningGameIn.value}...`
           joiningGameIn.value -= 1
         } else {
           clearInterval(interval)
           joiningGameIn.value = 3
-          $router.push(`/${store.gameId}`)
+          // set the game id to the store.
+          store.setGameId(data.gameId)
+          $router.push(`/game/${store.gameId}`)
         }
       }, 1000)
 

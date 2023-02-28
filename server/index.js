@@ -100,6 +100,17 @@ export default async _nitroApp => {
     socket.on('leaveRoom', data => {
       leaveRoom(socket, data)
     })
+    socket.on('userLeft', data => {
+      socket.leave(data.gameId)
+      socket.to(data.gameId).emit('userLeft', socket.id)
+    })
+    socket.on('disconnecting', reason => {
+      for (const room of socket.rooms) {
+        if (room !== socket.id) {
+          socket.to(room).emit('userLeft', socket.id)
+        }
+      }
+    })
   })
 
   const joinLobby = (socket, data) => {
@@ -139,7 +150,7 @@ export default async _nitroApp => {
   const guess = (socket, data) => {
     socket.to(data.gameId).emit('guess', {
       guess: data.guess,
-      player: data.id,
+      player: data.id
     })
   }
 

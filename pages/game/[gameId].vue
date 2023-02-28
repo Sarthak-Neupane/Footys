@@ -15,11 +15,19 @@
   </div>
   <div v-if="gameNotStarted"> Game Starts In {{ gameStartsIn }} </div>
   <div class="min-h-screen bg-lightWhite" v-else>
+    <Transition name="earlyFade">
+      <div class=" w-1/2 absolute z-10 top-5 left-1/2 -translate-y-0 -translate-x-1/2">
+        <base-card v-if="opponentLeft" class=""
+          background-back="lightWhite" :background-front="getOpponentColor" cursor="cursor-default" :group-hover=false
+          group-name="card" :grounded=false>
+          Opponent Left The Game </base-card>
+      </div>
+    </Transition>
     <canvas class="h-screen w-screen max-h-screen max-w-full absolute bottom-0 left-0 pointer-events-none"
       ref="canvas"></canvas>
     <div class="border-b-[1px] border-solid border-lightBlack w-full text-center py-4 md:py-6"
       :class="`bg-${getPlayerColor}`">
-      <logo-name class="font-black text-4xl" :foe-color="getOpponentColor"></logo-name>
+      <logo-name class="font-black text-4xl" :foe-color="getOpponentColor" @click-logo="clickLogo()"></logo-name>
     </div>
     <div
       class="container md:py-5 sm:w-3/4 md:w-4/5 lg:w-4/6 my-0 mx-auto h-full flex flex-col justify-start items-center">
@@ -41,12 +49,12 @@
             <div class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full" v-if="!gameEnd">
               <Transition name="earlyFade" mode="out-in">
                 <div class="w-full flex justify-center items-center gap-10" v-if="playerTurn">
-                  <base-card background-back="bg-lightWhite" :background-front="getPlayerColor" cursor="cursor-default"
+                  <base-card background-back="lightWhite" :background-front="getPlayerColor" cursor="cursor-default"
                     :group-hover=false group-name="card" :grounded=false> YOUR PLAY </base-card>
                 </div>
 
                 <div class="w-full flex justify-center items-center gap-10" v-else>
-                  <base-card background-back="bg-lightWhite" :background-front="getOpponentColor" cursor="cursor-default"
+                  <base-card background-back="lightWhite" :background-front="getOpponentColor" cursor="cursor-default"
                     :group-hover=false group-name="card" :grounded=false> OPPONENT PLAY </base-card>
                 </div>
               </Transition>
@@ -73,12 +81,12 @@
     </div>
   </div>
 </template>
-
+  
 <script setup>
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '@/store/'
 import { v4 as uuidv4 } from 'uuid'
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 
 
@@ -103,14 +111,38 @@ const interval = setInterval(() => {
 // register game store and router
 const store = useGameStore()
 const $router = useRouter()
+const $route = useRoute()
+
 
 // register plugins
 const { $confetti } = useNuxtApp()
 const { $socket } = useNuxtApp()
 
+// page meta
+definePageMeta({
+  title: 'Game',
+  meta: [
+    {
+      hid: 'description',
+      name: 'description',
+      content: 'Game page'
+    }
+  ],
+  validate: async (route) => {
+    console.log(route.params.gameId)
+    if (useGameStore().gameId == null || useGameStore().gameId == undefined || route.params.gameId != useGameStore().gameId) {
+      return false
+    } else {
+      return true
+    }
+  }
+})
 
 
 // REGISTERING REFS
+
+// know if the opponnet left the game
+const opponentLeft = ref(false)
 
 // get the state from store
 const { getPlayerColor } = storeToRefs(store)
@@ -164,9 +196,17 @@ onBeforeMount(() => {
   $socket.emit('gameStart', { id: player.value, gameId: store.gameId })
 })
 
-// onMounted(() => {
-// })
-
+onBeforeRouteLeave((to, from, next) => {
+  const answer = confirm('Are you sure you want to leave?')
+  if (answer) {
+    if (!store.gameEnd && !opponentLeft.value && store.gameId != null) {
+      $socket.emit('userLeft', { id: player.value, gameId: store.gameId })
+    }
+    next()
+  } else {
+    next(false)
+  }
+})
 // LIFECYCLE HOOKS ENDS -----------------------------------------
 
 // WATCHERS START ------------------------------------------------
@@ -181,6 +221,7 @@ watch(getTimer, (current, previous) => {
     })
   }
 })
+
 
 // WATCHERS END --------------------------------------------------
 
@@ -204,6 +245,11 @@ const returnClass = computed(() => {
 // COMPUTED ENDS -------------------------------------------------
 
 // METHODS STARTS -------------------------------------------------
+
+// method to go to home page
+const clickLogo = () => {
+  $router.push('/')
+}
 
 // send the guess to server and grid. After the 'submit-answer' event is emitted by the searchBar component
 const sendGuessToEmit = (e) => {
@@ -333,8 +379,8 @@ const socketEvents = () => {
     gameFound.value = false
     const delayTime = setTimeout(() => {
       $socket.emit('joinLobby', { id: store.getCurrentPlayer })    // join the lobby after exiting the room
-  }, 1000)
-  timeout.value = delayTime
+    }, 1000)
+    timeout.value = delayTime
   })
 
   // Check if the player joined the lobby
@@ -352,7 +398,6 @@ const socketEvents = () => {
     if (data.players.includes(store.getCurrentSocketId)) {
       matchmakingText.value = 'Game Found'
       gameFound.value = true
-      store.resetGame()
       $socket.emit('joinGame', { id: store.getCurrentPlayer, gameId: data.gameId })
     }
   })
@@ -360,10 +405,9 @@ const socketEvents = () => {
   // Check if the player has joined the game
   // check to see if the client has joined the game. If yes, set the game id into the store. 
   $socket.on('gameJoined', (data) => {
-
-    // set the game id to the store.
-    store.setGameId(data.gameId)
+    
     matchmakingText.value = `Joining game...`
+
   })
 
   $socket.on('bothPlayersJoined', (data) => {
@@ -371,16 +415,33 @@ const socketEvents = () => {
 
       const Newinterval = setInterval(() => {
         if (joiningGameIn.value > 0) {
-          console.log(joiningGameIn.value)
           matchmakingText.value = `Joining game in ${joiningGameIn.value}...`
           joiningGameIn.value -= 1
         } else {
+          store.resetGame()
           clearInterval(Newinterval)
           joiningGameIn.value = 3
-          $router.push(`/${store.gameId}`)
+          // set the game id to the store.
+          store.setGameId(data.gameId)
+          $router.push(`/game/${store.gameId}`)
         }
       }, 1000)
 
+    }
+  })
+
+  $socket.on('userLeft', () => {
+    if (!store.gameEnd) {
+      console.log('user left')
+      opponentLeft.value = true
+      // setTimeout(() => {
+      //   opponentLeft.value = false
+      // }, 3000)
+      store.setGameEnd()   // end the game
+      store.setResult('win')  // set the result of the current player
+      store.setWinner(player.value)    // set the winner of the game
+      $confetti.addConfetti()
+      store.resetTimer()
     }
   })
 
@@ -796,7 +857,7 @@ const gridAnswers = [
   matches[2][2],
 ];
 </script>
-
+  
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
