@@ -19,7 +19,7 @@
 
 
 <script setup>
-import { useGameStore } from '@/store/';
+import { useGameStore } from '~~/store/gameStore';
 import { storeToRefs } from 'pinia';
 
 const emit = defineEmits({

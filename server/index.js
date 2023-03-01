@@ -47,9 +47,10 @@ export default async _nitroApp => {
     const clients = io.of('/').adapter.rooms.get('lobby')
     const numClients = [...(clients ? clients : 0)]
     if (numClients.length > 1) {
-      const player1 = numClients[0]
-      const player2 = numClients[1]
-      const gameRoom = uuidv4()
+      // const player1 = numClients[0]
+      // const player2 = numClients[1]
+      const gameRoomId = uuidv4()
+      const gameRoom = gameRoomId.replace(/-/g, "")
 
       io.to('lobby').emit('gameFound', {
         gameId: gameRoom,
@@ -179,7 +180,7 @@ export default async _nitroApp => {
     })
   }
 
-  io.of('/').adapter.on('join-room', (room, id) => {
+  io.of('/').adapter.on('join-room', async (room, id) => {
     if (room === 'lobby') {
     } else {
       const clients = io.of('/').adapter.rooms.get(room)
@@ -187,10 +188,15 @@ export default async _nitroApp => {
       const numClients = [...(clients ? clients : 0)]
       // if there are two clients, start a game
       if (numClients.length === 2) {
-        console.log([...room])
+        const data = await $fetch('/api/Clubs/getClubs')
         io.to(room).emit('bothPlayersJoined', {
           gameId: room,
-          isJoined: true
+          isJoined: true,
+          gameData: {
+            columnClubs : data.initialClubs,
+            rowClubs : data.secondaryClubs,
+            matches: data.matches
+          }
         })
       }
     }

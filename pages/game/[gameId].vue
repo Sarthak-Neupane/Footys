@@ -1,6 +1,26 @@
 <template>
-  <div v-if="searching">
-    <div class="fixed top-0 left-0 w-full h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
+  <Transition name="fade"
+    class="fixed top-0 left-0 w-screen h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
+    <div class="w-full absolute top-0 left-0" v-if="playerWantingToLeave">
+      <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue" cursor="cursor-default"
+        :groupHover="false" groupName="card" :grounded=false>
+        <div class=" flex flex-col justify-center items-center gap-10 w-full">
+          <h1>Are you sure, you want to forfeit the match ?</h1>
+          <div class="flex w-full justify-around items-center">
+            <base-card class="px-8 text-xl" background-back="lightWhite" background-front="green" :groupHover="true"
+              groupName="group" :grounded=false @click="leaveGame()"> YES
+            </base-card>
+            <base-card class="px-8 text-xl" background-back="lightWhite" background-front="green" :groupHover="true"
+              groupName="group" :grounded=false @click="dontLeaveGame()"> NO
+            </base-card>
+          </div>
+        </div>
+      </base-card>
+    </div>
+  </Transition>
+  <Transition name="fade"
+    class="fixed top-0 left-0 w-full h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
+    <div v-if="searching">
       <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue" cursor="cursor-default"
         :groupHover="false" groupName="card" :grounded=false>
         <div class="flex flex-col justify-center items-center gap-14">
@@ -12,106 +32,100 @@
         </div>
       </base-card>
     </div>
-  </div>
-  <div v-if="gameNotStarted"> Game Starts In {{ gameStartsIn }} </div>
-  <div class="min-h-screen bg-lightWhite" v-else>
-    <Transition name="earlyFade">
-      <div class=" w-1/2 absolute z-10 top-5 left-1/2 -translate-y-0 -translate-x-1/2">
-        <base-card v-if="opponentLeft" class=""
-          background-back="lightWhite" :background-front="getOpponentColor" cursor="cursor-default" :group-hover=false
-          group-name="card" :grounded=false>
-          Opponent Left The Game </base-card>
-      </div>
-    </Transition>
-    <canvas class="h-screen w-screen max-h-screen max-w-full absolute bottom-0 left-0 pointer-events-none"
-      ref="canvas"></canvas>
-    <div class="border-b-[1px] border-solid border-lightBlack w-full text-center py-4 md:py-6"
-      :class="`bg-${getPlayerColor}`">
-      <logo-name class="font-black text-4xl" :foe-color="getOpponentColor" @click-logo="clickLogo()"></logo-name>
-    </div>
-    <div
-      class="container md:py-5 sm:w-3/4 md:w-4/5 lg:w-4/6 my-0 mx-auto h-full flex flex-col justify-start items-center">
-      <div class="w-full px-6 flex flex-col md:flex-row justify-center items-center gap-7 md:gap-12">
-        <div class="w-full flex flex-col justify-center items-center gap-8 md:gap-12">
-          <Grid :gridAnswers="gridAnswers" :columnClubs="columnClubs" :rowClubs="rowClubs" :currentAnswer="currentAnswer"
-            :gameEnd="gameEnd" :resetGrid="resetGrid" @player-guess="sendGuessToStore" @game-ended="gameEnded"></Grid>
-          <transition name="fade" mode="out-in" appear>
-            <div class="relative w-full md:w-full flex justify-center items-center" v-if="!gameEnd">
-              <SearchBar @submit-answer="sendGuessToEmit" v-if="playerTurn" />
-            </div>
-            <div class="w-full flex flex-col justify-center items-center gap-5" v-else>
-              <action-buttons @new-game="startNewGame()"></action-buttons>
-            </div>
-          </transition>
+  </Transition>
+  <Transition name="fade">
+    <div v-if="gameNotStarted" class="fixed top-0 left-0 w-full h-screen bg-green z-50 flex justify-center items-center">
+      <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue" cursor="cursor-default"
+        :groupHover="false" groupName="card" :grounded=false>
+        <div class="flex flex-col justify-center items-center gap-14">
+          <div class="text-3xl font-bold text-center"> Game Starts In {{ gameStartsIn }} </div>
         </div>
-        <div class="w-full h-full flex flex-col justify-between items-center gap-7 md:gap-10 lg:gap-14">
-          <Transition name="fade">
-            <div class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full" v-if="!gameEnd">
-              <Transition name="earlyFade" mode="out-in">
-                <div class="w-full flex justify-center items-center gap-10" v-if="playerTurn">
-                  <base-card background-back="lightWhite" :background-front="getPlayerColor" cursor="cursor-default"
-                    :group-hover=false group-name="card" :grounded=false> YOUR PLAY </base-card>
-                </div>
-
-                <div class="w-full flex justify-center items-center gap-10" v-else>
-                  <base-card background-back="lightWhite" :background-front="getOpponentColor" cursor="cursor-default"
-                    :group-hover=false group-name="card" :grounded=false> OPPONENT PLAY </base-card>
-                </div>
-              </Transition>
-              <div class="relative h-20 w-20 flex justify-center items-center">
-                <Timer />
+      </base-card>
+    </div>
+    <div class="min-h-screen bg-lightWhite" v-else>
+      <Transition name="earlyFade">
+        <div class=" w-1/2 absolute z-10 top-5 left-1/2 -translate-y-0 -translate-x-1/2">
+          <base-card v-if="opponentLeft" class="" background-back="lightWhite" :background-front="getOpponentColor"
+            cursor="cursor-default" :group-hover=false group-name="card" :grounded=false>
+            Opponent Left The Game </base-card>
+        </div>
+      </Transition>
+      <canvas class="h-screen w-screen max-h-screen max-w-full absolute bottom-0 left-0 pointer-events-none"
+        ref="canvas"></canvas>
+      <div class="border-b-[1px] border-solid border-lightBlack w-full text-center py-4 md:py-6"
+        :class="`bg-${getPlayerColor}`">
+        <logo-name class="font-black text-4xl" :foe-color="getOpponentColor" @click-logo="clickLogo()"></logo-name>
+      </div>
+      <div
+        class="container md:py-5 sm:w-3/4 md:w-4/5 lg:w-4/6 my-0 mx-auto h-full flex flex-col justify-start items-center">
+        <div class="w-full px-6 flex flex-col md:flex-row justify-center items-center gap-7 md:gap-12">
+          <div class="w-full flex flex-col justify-center items-center gap-8 md:gap-12">
+            <Grid :currentAnswer="currentAnswer" :gameEnd="gameEnd" :resetGrid="resetGrid"
+              @player-guess="sendGuessToStore" @game-ended="gameEnded"></Grid>
+            <transition name="fade" mode="out-in" appear>
+              <div class="relative w-full md:w-full flex justify-center items-center" v-if="!gameEnd">
+                <SearchBar @submit-answer="sendGuessToEmit" v-if="playerTurn" />
               </div>
+              <div class="w-full flex flex-col justify-center items-center gap-5" v-else>
+                <action-buttons @new-game="startNewGame()"></action-buttons>
+              </div>
+            </transition>
+          </div>
+          <div class="w-full h-full flex flex-col justify-between items-center gap-7 md:gap-10 lg:gap-14">
+            <Transition name="fade">
+              <div class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full" v-if="!gameEnd">
+                <Transition name="earlyFade" mode="out-in">
+                  <div class="w-full flex justify-center items-center gap-10" v-if="playerTurn">
+                    <base-card background-back="lightWhite" :background-front="getPlayerColor" cursor="cursor-default"
+                      :group-hover=false group-name="card" :grounded=false> YOUR PLAY </base-card>
+                  </div>
+
+                  <div class="w-full flex justify-center items-center gap-10" v-else>
+                    <base-card background-back="lightWhite" :background-front="getOpponentColor" cursor="cursor-default"
+                      :group-hover=false group-name="card" :grounded=false> OPPONENT PLAY </base-card>
+                  </div>
+                </Transition>
+                <div class="relative h-20 w-20 flex justify-center items-center">
+                  <Timer />
+                </div>
+              </div>
+              <div class="result" v-else>
+                <h1 class="font-black text-center text-4xl lg:text-6xl" v-if="gameResult != 'draw'">
+                  <span :class="returnClass"> YOU </span><span :class="returnClass">{{ isWinner ? 'WIN' :
+                    'LOSE'
+                  }}</span>
+                </h1>
+                <h1 class="font-black text-center text-4xl lg:text-6xl" v-else>
+                  <span class="text-lightBlack"> Oops! YOU DREW </span>
+                </h1>
+              </div>
+            </Transition>
+            <div class="w-full sm:w-3/4 flex justify-between items-center">
+              <PlayerGuesses />
             </div>
-            <div class="result" v-else>
-              <h1 class="font-black text-center text-4xl lg:text-6xl" v-if="gameResult != 'draw'">
-                <span :class="returnClass"> YOU </span><span :class="returnClass">{{ isWinner ? 'WIN' :
-                  'LOSE'
-                }}</span>
-              </h1>
-              <h1 class="font-black text-center text-4xl lg:text-6xl" v-else>
-                <span class="text-lightBlack"> Oops! YOU DREW </span>
-              </h1>
-            </div>
-          </Transition>
-          <div class="w-full sm:w-3/4 flex justify-between items-center">
-            <PlayerGuesses />
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </Transition>
 </template>
   
 <script setup>
 import { storeToRefs } from 'pinia'
-import { useGameStore } from '@/store/'
+import { useGameStore } from '~~/store/gameStore'
+import { useGridStore } from '~~/store/gridStore'
 import { v4 as uuidv4 } from 'uuid'
 import { useRouter, useRoute } from 'vue-router';
 
 
-
-// TEMPORARY ---------------------------------------------------------------------------------------------------------------
 // register refs for the waiting
 const gameNotStarted = ref(true)
 const gameStartsIn = ref(3)
 
-const interval = setInterval(() => {
-  if (gameStartsIn.value > 0) {
-    gameStartsIn.value--
-  } else {
-    gameNotStarted.value = false
-    store.startTimer()
-    clearInterval(interval)
-  }
-}, 1000)
-// TEMPORARY END ------------------------------------------------------------------------------------------------------------
-
-
-
 // register game store and router
 const store = useGameStore()
+const gridStore = useGridStore()
 const $router = useRouter()
-const $route = useRoute()
 
 
 // register plugins
@@ -129,20 +143,21 @@ definePageMeta({
     }
   ],
   validate: async (route) => {
-    console.log(route.params.gameId)
     if (useGameStore().gameId == null || useGameStore().gameId == undefined || route.params.gameId != useGameStore().gameId) {
       return false
     } else {
       return true
     }
-  }
+  },
 })
 
 
 // REGISTERING REFS
 
-// know if the opponnet left the game
+// refs for player leaving a game prematurely
 const opponentLeft = ref(false)
+const playerWantingToLeave = ref(false)
+const playerDecidedToLeave = ref(null)
 
 // get the state from store
 const { getPlayerColor } = storeToRefs(store)
@@ -176,16 +191,20 @@ const timeout = ref(0)
 // REGISTERING REFS ENDS ---------
 
 
-// wait unitl the game data is loaded from the db 
-//............................................
-//............................................
-//............................................
-//............................................
-
-
 // Lifecycle Hooks ----------------------------------------------
 // set the player id before the component is mounted
-onBeforeMount(() => {
+onBeforeMount(async () => {
+  const interval = setInterval(() => {
+    if (gameStartsIn.value > 0) {
+      gameStartsIn.value--
+    } else {
+      gameNotStarted.value = false
+      store.startTimer()
+      clearInterval(interval)
+    }
+  }, 1000)
+
+  // check if the player has a local storage id
   if (localStorage.getItem('id')) {
     player.value = localStorage.getItem('id')
   } else {
@@ -196,17 +215,29 @@ onBeforeMount(() => {
   $socket.emit('gameStart', { id: player.value, gameId: store.gameId })
 })
 
+
 onBeforeRouteLeave((to, from, next) => {
-  const answer = confirm('Are you sure you want to leave?')
-  if (answer) {
-    if (!store.gameEnd && !opponentLeft.value && store.gameId != null) {
-      $socket.emit('userLeft', { id: player.value, gameId: store.gameId })
+  if (!store.gameEnd && !opponentLeft.value && store.gameId != null) {
+    playerWantingToLeave.value = true
+    if (playerDecidedToLeave.value != null) {
+      if (playerDecidedToLeave.value === true) {
+        if (!store.gameEnd && !opponentLeft.value && store.gameId != null) {
+          // $socket.emit('userLeft', { id: player.value, gameId: store.gameId })
+          next()
+        }
+      } else {
+        next(false)
+      }
+    } else {
+      next(false)
     }
-    next()
   } else {
-    next(false)
+    next()
   }
+
 })
+
+
 // LIFECYCLE HOOKS ENDS -----------------------------------------
 
 // WATCHERS START ------------------------------------------------
@@ -214,13 +245,27 @@ onBeforeRouteLeave((to, from, next) => {
 // watcher to check if the current turn is over 
 watch(getTimer, (current, previous) => {
   if (current === 0 && playerTurn.value) {
-    console.log('turn over')
     store.resetTimer()
     sendGuessToEmit({
       isEmpty: true,
     })
   }
 })
+
+watch(playerDecidedToLeave, (current, previous) => {
+  if (current === true) {
+    if (!store.gameEnd && !opponentLeft.value && store.gameId != null) {
+      $socket.emit('userLeft', { id: player.value, gameId: store.gameId })
+      $router.push('/')
+    } else {
+      $router.push('/')
+    }
+  } else {
+    console.log('HAHAHAHA')
+  }
+})
+
+
 
 
 // WATCHERS END --------------------------------------------------
@@ -251,6 +296,16 @@ const clickLogo = () => {
   $router.push('/')
 }
 
+const leaveGame = () => {
+  playerDecidedToLeave.value = true
+  // playerWantingToLeave.value = false
+}
+
+const dontLeaveGame = () => {
+  playerWantingToLeave.value = false
+  playerDecidedToLeave.value = false
+}
+
 // send the guess to server and grid. After the 'submit-answer' event is emitted by the searchBar component
 const sendGuessToEmit = (e) => {
 
@@ -272,11 +327,9 @@ const sendGuessToEmit = (e) => {
 const sendGuessToStore = (e) => {
   if (e.playerId === player.value) {
     // add to player guess
-    console.log('adding to player guess')
     store.addPlayerGuess(e)
   } else {
     // add to opponent guess
-    console.log('adding to opponent guess')
     store.addOpponentGuess(e)
   }
 
@@ -383,16 +436,6 @@ const socketEvents = () => {
     timeout.value = delayTime
   })
 
-  // Check if the player joined the lobby
-  $socket.on('lobbyJoined', (data) => {
-    console.log('joined lobby' + data)
-  })
-
-  // Check if the player left the lobby
-  $socket.on('lobbyLeft', () => {
-    console.log('left lobby')
-  })
-
   // check to see if the client has found a game. If yes, emit an event to join the game
   $socket.on('gameFound', (data) => {
     if (data.players.includes(store.getCurrentSocketId)) {
@@ -405,7 +448,7 @@ const socketEvents = () => {
   // Check if the player has joined the game
   // check to see if the client has joined the game. If yes, set the game id into the store. 
   $socket.on('gameJoined', (data) => {
-    
+
     matchmakingText.value = `Joining game...`
 
   })
@@ -423,6 +466,13 @@ const socketEvents = () => {
           joiningGameIn.value = 3
           // set the game id to the store.
           store.setGameId(data.gameId)
+
+          // set the gameData to store
+          gridStore.setColumnClubs(data.gameData.columnClubs)
+          gridStore.setRowClubs(data.gameData.rowClubs)
+          gridStore.setMatches(data.gameData.matches)
+          gridStore.setGridAnswers()
+
           $router.push(`/game/${store.gameId}`)
         }
       }, 1000)
@@ -432,11 +482,7 @@ const socketEvents = () => {
 
   $socket.on('userLeft', () => {
     if (!store.gameEnd) {
-      console.log('user left')
       opponentLeft.value = true
-      // setTimeout(() => {
-      //   opponentLeft.value = false
-      // }, 3000)
       store.setGameEnd()   // end the game
       store.setResult('win')  // set the result of the current player
       store.setWinner(player.value)    // set the winner of the game
@@ -458,404 +504,6 @@ if ($socket && $socket.connected) {
   console.log('not connected')
 }
 
-
-// DATA FOR TEST USE
-const columnClubs = [
-  {
-    _id: "63e5279042fd03399bdfe733",
-    id: 4,
-    name: "Newcastle",
-    fullName: "Newcastle United",
-    league: "Premier League",
-    country: "England",
-    squad: [],
-    __v: 0,
-  },
-  {
-    _id: "63e5279042fd03399bdfe73f",
-    id: 16,
-    name: "Leeds",
-    fullName: "Leeds United",
-    league: "Premier League",
-    country: "England",
-    squad: [],
-    __v: 0,
-  },
-  {
-    _id: "63e5279042fd03399bdfe737",
-    id: 8,
-    name: "Fulham",
-    fullName: "Fulham FC",
-    league: "Premier League",
-    country: "England",
-    squad: [],
-    __v: 0,
-  },
-];
-
-const matches = [
-  [
-    [
-      {
-        _id: "63e6728539bcf168cdb0456a",
-        id: 456,
-        name: "Ivan Toney",
-        shirtNumber: 17,
-        position: "Centre-Forward",
-        currentClub: "63e5279042fd03399bdfe736",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe736",
-          "63e5279042fd03399bdfe733",
-        ],
-        __v: 0,
-      },
-    ],
-    [
-      {
-        _id: "63e67061a57e5e3208658468",
-        id: 295,
-        name: "Alex McCarthy",
-        shirtNumber: 1,
-        position: "Goalkeeper",
-        currentClub: "63e5279042fd03399bdfe743",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe743",
-          "63e5279042fd03399bdfe73b",
-          "63e5279042fd03399bdfe73f",
-          "63e5279042fd03399bdfe736",
-        ],
-        __v: 0,
-      },
-      {
-        _id: "63e6728539bcf168cdb04557",
-        id: 437,
-        name: "Pontus Jansson",
-        shirtNumber: 18,
-        position: "Centre-Back",
-        currentClub: "63e5279042fd03399bdfe736",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe736",
-          "63e5279042fd03399bdfe73f",
-          "63e52868b969baef8ede499d",
-        ],
-        __v: 0,
-      },
-      {
-        _id: "63e672ed6633ea3de73e5e88",
-        id: 467,
-        name: "Stuart Dallas",
-        shirtNumber: 15,
-        position: "Right-Back",
-        currentClub: "63e5279042fd03399bdfe73f",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe73f",
-          "63e5279042fd03399bdfe736",
-        ],
-        __v: 0,
-      },
-      {
-        _id: "63e672ed6633ea3de73e5e8c",
-        id: 471,
-        name: "Adam Forshaw",
-        shirtNumber: 4,
-        position: "Central Midfield",
-        currentClub: "63e5279042fd03399bdfe73f",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe73f",
-          "63e5279042fd03399bdfe736",
-        ],
-        __v: 0,
-      },
-    ],
-    [
-      {
-        _id: "63e673f311bdd788d422cdcf",
-        id: 517,
-        name: "Ryan Fredericks",
-        shirtNumber: 2,
-        position: "Right-Back",
-        currentClub: "63e5279042fd03399bdfe742",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe742",
-          "63e5279042fd03399bdfe740",
-          "63e5279042fd03399bdfe737",
-          "63e5279042fd03399bdfe734",
-          "63e5279042fd03399bdfe736",
-        ],
-        __v: 0,
-      },
-    ],
-  ],
-  [
-    [
-      {
-        _id: "63e66d36a1934494aacabf86",
-        id: 172,
-        name: "Jamaal Lascelles",
-        shirtNumber: 6,
-        position: "Centre-Back",
-        currentClub: "63e5279042fd03399bdfe733",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe733",
-          "63e5279042fd03399bdfe73c",
-        ],
-        __v: 0,
-      },
-      {
-        _id: "63e6716957c170b9969f4fc0",
-        id: 366,
-        name: "Jack Colback",
-        shirtNumber: 8,
-        position: "Defensive Midfield",
-        currentClub: "63e5279042fd03399bdfe73c",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe73c",
-          "63e5279042fd03399bdfe733",
-        ],
-        __v: 0,
-      },
-      {
-        _id: "63e6716957c170b9969f4fc5",
-        id: 371,
-        name: "Jonjo Shelvey",
-        shirtNumber: 6,
-        position: "Central Midfield",
-        currentClub: "63e5279042fd03399bdfe73c",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe73c",
-          "63e5279042fd03399bdfe733",
-          "63e5279042fd03399bdfe739",
-        ],
-        __v: 0,
-      },
-      {
-        _id: "63e6716957c170b9969f4fd0",
-        id: 382,
-        name: "Chris Wood",
-        shirtNumber: 39,
-        position: "Centre-Forward",
-        currentClub: "63e5279042fd03399bdfe733",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe733",
-          "63e5279042fd03399bdfe73c",
-          "63e5279042fd03399bdfe73f",
-          "63e5279042fd03399bdfe73d",
-          "63e5279042fd03399bdfe735",
-        ],
-        __v: 0,
-      },
-    ],
-    [
-      {
-        _id: "63e6716957c170b9969f4fd0",
-        id: 382,
-        name: "Chris Wood",
-        shirtNumber: 39,
-        position: "Centre-Forward",
-        currentClub: "63e5279042fd03399bdfe733",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe733",
-          "63e5279042fd03399bdfe73c",
-          "63e5279042fd03399bdfe73f",
-          "63e5279042fd03399bdfe73d",
-          "63e5279042fd03399bdfe735",
-        ],
-        __v: 0,
-      },
-      {
-        _id: "63e672ed6633ea3de73e5e95",
-        id: 480,
-        name: "Patrick Bamford",
-        shirtNumber: 9,
-        position: "Centre-Forward",
-        currentClub: "63e5279042fd03399bdfe73f",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe73f",
-          "63e5279042fd03399bdfe738",
-          "63e5279042fd03399bdfe73b",
-          "63e5279042fd03399bdfe73c",
-        ],
-        __v: 0,
-      },
-    ],
-    [
-      {
-        _id: "63e6716957c170b9969f4fbb",
-        id: 361,
-        name: "Neco Williams",
-        shirtNumber: 7,
-        position: "Right-Back",
-        currentClub: "63e5279042fd03399bdfe73c",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe73c",
-          "63e5279042fd03399bdfe739",
-          "63e5279042fd03399bdfe737",
-        ],
-        __v: 0,
-      },
-    ],
-  ],
-  [
-    [
-      {
-        _id: "63e66d36a1934494aacabf95",
-        id: 187,
-        name: "Anthony Gordon",
-        shirtNumber: 8,
-        position: "Left Winger",
-        currentClub: "63e5279042fd03399bdfe733",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe733",
-          "63e5279042fd03399bdfe741",
-        ],
-        __v: 0,
-      },
-      {
-        _id: "63e670d9160b3d5932b7a1c1",
-        id: 345,
-        name: "Andros Townsend",
-        shirtNumber: 14,
-        position: "Right Winger",
-        currentClub: "63e5279042fd03399bdfe741",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe741",
-          "63e5279042fd03399bdfe73b",
-          "63e5279042fd03399bdfe733",
-          "63e5279042fd03399bdfe734",
-          "63e5279042fd03399bdfe73f",
-        ],
-        __v: 0,
-      },
-    ],
-    [
-      {
-        _id: "63e670d9160b3d5932b7a1ae",
-        id: 326,
-        name: "Andy Lonergan",
-        shirtNumber: 31,
-        position: "Goalkeeper",
-        currentClub: "63e5279042fd03399bdfe741",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe741",
-          "63e5279042fd03399bdfe739",
-          "63e5279042fd03399bdfe73f",
-          "63e5279042fd03399bdfe73e",
-          "63e5279042fd03399bdfe737",
-        ],
-        __v: 0,
-      },
-      {
-        _id: "63e670d9160b3d5932b7a1c1",
-        id: 345,
-        name: "Andros Townsend",
-        shirtNumber: 14,
-        position: "Right Winger",
-        currentClub: "63e5279042fd03399bdfe741",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe741",
-          "63e5279042fd03399bdfe73b",
-          "63e5279042fd03399bdfe733",
-          "63e5279042fd03399bdfe734",
-          "63e5279042fd03399bdfe73f",
-        ],
-        __v: 0,
-      },
-      {
-        _id: "63e672ed6633ea3de73e5e80",
-        id: 459,
-        name: "Joel Robles",
-        shirtNumber: 22,
-        position: "Goalkeeper",
-        currentClub: "63e5279042fd03399bdfe73f",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe73f",
-          "63e5281d15e7e9fb79c84945",
-          "63e5279042fd03399bdfe741",
-          "63e5281d15e7e9fb79c84942",
-          "63e5281d15e7e9fb79c84943",
-        ],
-        __v: 0,
-      },
-    ],
-    [
-      {
-        _id: "63e670d9160b3d5932b7a1ae",
-        id: 326,
-        name: "Andy Lonergan",
-        shirtNumber: 31,
-        position: "Goalkeeper",
-        currentClub: "63e5279042fd03399bdfe741",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe741",
-          "63e5279042fd03399bdfe739",
-          "63e5279042fd03399bdfe73f",
-          "63e5279042fd03399bdfe73e",
-          "63e5279042fd03399bdfe737",
-        ],
-        __v: 0,
-      },
-      {
-        _id: "63e67374c6167f52d4f9eec2",
-        id: 485,
-        name: "Shane Duffy",
-        shirtNumber: 5,
-        position: "Centre-Back",
-        currentClub: "63e5279042fd03399bdfe737",
-        clubsPlayedFor: [
-          "63e5279042fd03399bdfe737",
-          "63e5279042fd03399bdfe735",
-          "63e5279042fd03399bdfe741",
-        ],
-        __v: 0,
-      },
-    ],
-  ],
-];
-
-const rowClubs = [
-  {
-    _id: "63e5279042fd03399bdfe736",
-    id: 7,
-    name: "Brentford",
-    fullName: "Brentford FC",
-    league: "Premier League",
-    country: "England",
-    squad: [],
-    __v: 0,
-  },
-  {
-    _id: "63e5279042fd03399bdfe73c",
-    id: 13,
-    name: "Nottm Forest",
-    fullName: "Nottingham Forest",
-    league: "Premier League",
-    country: "England",
-    squad: [],
-    __v: 0,
-  },
-  {
-    _id: "63e5279042fd03399bdfe741",
-    id: 18,
-    name: "Everton",
-    fullName: "Everton FC",
-    league: "Premier League",
-    country: "England",
-    squad: [],
-    __v: 0,
-  },
-];
-
-const gridAnswers = [
-  matches[0][0],
-  matches[0][1],
-  matches[0][2],
-  matches[1][0],
-  matches[1][1],
-  matches[1][2],
-  matches[2][0],
-  matches[2][1],
-  matches[2][2],
-];
 </script>
   
 <style scoped>

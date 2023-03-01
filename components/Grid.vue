@@ -51,20 +51,22 @@
 
 
 <script setup>
-import { useGameStore } from '@/store/';
+import { useGameStore } from '~~/store/gameStore';
+import { useGridStore } from '~~/store/gridStore';
+import { storeToRefs } from 'pinia';
 import gsap from 'gsap';
 
 const store = useGameStore();
+const gridStore = useGridStore();
 
 const props = defineProps({
-    'gridAnswers': Array,
-    'columnClubs': Array,
-    'rowClubs': Array,
     'currentAnswer': Object,
     'resetGrid': Boolean
 })
 
 const emit = defineEmits(['playerGuess', 'gameEnded'])
+
+const { columnClubs, rowClubs, gridAnswers } = storeToRefs(gridStore)
 
 
 const playerIndexes = ref([])
@@ -77,30 +79,15 @@ const grid = ref()
 
 watch(() => props.currentAnswer, (currentGuess, previousGuess) => {
     if( currentGuess.isEmpty === true ) {
-        console.log('empty guess by' + currentGuess.playerId)
         emit('playerGuess', {
             isEmpty: true,
             'playerId': currentGuess.playerId,
             isCorrect: false,
         })
     } else {
-        console.log('It is not an empty guess by' + currentGuess.playerId)
         checkAnswer(currentGuess)
     }
 });
-
-// watch(()=> props.resetGrid, (currentGuess, previousGuess) => {
-    // grids.forEach((grid) => {
-    //     if(grid.value.classList.contains('bg-green')) {
-    //         grid.value.classList.remove('bg-green')
-    //     } else if(grid.value.classList.contains('bg-blue')) {
-    //         grid.value.classList.remove('bg-blue')
-    //     }
-    // })
-    // playerIndexes.value = []
-    // opponentIndexes.value = []
-    // occupiedIndexes.value = []
-// });
 
 
 const OneByOne = ref(null)
@@ -125,7 +112,7 @@ const grids = [
     ThreeByThree,
 ]
 
-const localArray = props.gridAnswers
+const localArray = gridAnswers.value
 
 const checkAnswer = (answer) => {
     outerloop: for (let [ind, elem] of localArray.entries()) {
@@ -162,7 +149,6 @@ const checkAnswer = (answer) => {
                             isDraw: false
                         })
                     } else if(winner === false && occupiedIndexes.value.length === 9) {
-                        console.log('draw')
                         emit('gameEnded', {
                             isDraw: true
                         })

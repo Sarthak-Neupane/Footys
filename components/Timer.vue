@@ -8,7 +8,7 @@
 
 <script setup>
 import { storeToRefs } from 'pinia';
-import { useGameStore } from '@/store/';
+import { useGameStore } from '~~/store/gameStore';
 
 const store = useGameStore();
 const { getTimer } = storeToRefs(store);

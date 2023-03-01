@@ -28,12 +28,14 @@
 </template>
 
 <script setup>
-import { useGameStore } from '@/store/';
+import { useGameStore } from '~~/store/gameStore';
+import { useGridStore } from '~~/store/gridStore';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'vue-router';
 
 // state management and router
 const store = useGameStore();
+const gridStore = useGridStore();
 const $router = useRouter();
 
 // registering plugins
@@ -81,13 +83,7 @@ const cancelSearch = () => {
 const socketEvents = () => {
   // check to see if the client has successfully joined the lobby 
   $socket.on('lobbyJoined', (data) => {
-    console.log('joined lobby' + data)
     store.setCurrentSocketId(data.playerSocketId)
-  })
-
-  // check to see if the client has successfully exited the lobby
-  $socket.on('lobbyLeft', () => {
-    console.log('left lobby')
   })
 
   // check to see if the client has found a game. If yes, emit an event to join the game
@@ -109,7 +105,6 @@ const socketEvents = () => {
 
   $socket.on('bothPlayersJoined', (data) => {
     if (data.isJoined) {
-
       const interval = setInterval(() => {
         if (joiningGameIn.value > 0) {
           matchmakingText.value = `Joining game in ${joiningGameIn.value}...`
@@ -119,6 +114,13 @@ const socketEvents = () => {
           joiningGameIn.value = 3
           // set the game id to the store.
           store.setGameId(data.gameId)
+
+          // set the gameData to store
+          gridStore.setColumnClubs(data.gameData.columnClubs)
+          gridStore.setRowClubs(data.gameData.rowClubs)
+          gridStore.setMatches(data.gameData.matches)
+          gridStore.setGridAnswers()
+
           $router.push(`/game/${store.gameId}`)
         }
       }, 1000)
@@ -136,12 +138,4 @@ if ($socket && $socket.connected) {
 } else {
   console.log('not connected')
 }
-
-
-
-
-// const getData = async () => {
-//   const data = await $fetch('/api/Clubs/getClubs')
-//   console.log(data)
-// }
 </script>
