@@ -1,6 +1,4 @@
 import io from 'socket.io-client'
-
-console.log(process)
 let socket
 
     socket = io('http://localhost:8000')
