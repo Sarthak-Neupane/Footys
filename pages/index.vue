@@ -134,9 +134,11 @@ const socketEvents = () => {
 
 // REGISTER SOCKET EVENTS IF THE SOCKET IS CONNECTED
 if ($socket && $socket.connected) {
+  console.log($socket)
   console.log('connected')
   socketEvents()
 } else {
+  console.log($socket)
   console.log('not connected')
 }
 </script>
