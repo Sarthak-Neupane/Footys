@@ -9,7 +9,7 @@
             cursor="cursor-pointer" :group-hover=true group-name="group" :grounded=false> HOME </base-card>
     </div>
     <div class="w-full">
-        <button class="bg-[#00ACEE] w-full text-lightWhite py-3"> TWEET YOUR RESULTS </button>
+        <button class="bg-[#00ACEE] w-full text-lightWhite py-3"> TWEET FEATURE COMING SOON ... </button>
     </div>
 </template>
 

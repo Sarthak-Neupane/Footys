@@ -33,7 +33,8 @@ export default async _nitroApp => {
       origin: [
         'https://admin.socket.io',
         'http://localhost:3000',
-        'http://localhost:8000'
+        'http://localhost:8000',
+        'http://192.168.101.10:3000'
       ]
     }
   })

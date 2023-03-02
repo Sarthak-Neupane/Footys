@@ -1,28 +1,29 @@
 <template>
   <div class="h-screen grid content-center bg-green">
     <div class="container flex flex-col justify-center items-center gap-20 mx-auto">
-      <logo-name class="font-black text-6xl" foe-color="blue"></logo-name>
+      <logo-name class="font-black text-6xl xl:text-8xl" foe-color="blue"></logo-name>
       <div class="flex flex-col justify-center items-center gap-12 text-center text-3xl">
+        <nuxt-link to="/how-to-play">
         <base-card background-back="lightWhite" background-front="blue" cursor="cursor-pointer" :group-hover=true
-          group-name="group" :grounded=false> INSTRUCTIONS </base-card>
+          group-name="group" :grounded=false>  INSTRUCTIONS </base-card> </nuxt-link> 
         <base-card background-back="lightWhite" background-front="blue" cursor="cursor-pointer" :group-hover=true
           group-name="group" :grounded=false @click="findAGame()"> PLAY ONLINE
         </base-card>
       </div>
     </div>
-  </div>
-  <div v-if="searching">
-    <div class="fixed top-0 left-0 w-full h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
-      <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue" cursor="cursor-default"
-        :groupHover="false" groupName="card" :grounded=false>
-        <div class="flex flex-col justify-center items-center gap-14">
-          <div class="text-3xl font-bold text-center"> {{ matchmakingText }} </div>
-          <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green"></div>
-          <base-card class="px-8 text-xl" background-back="lightWhite" background-front="green" :groupHover="true"
-            groupName="group" :grounded=false @click="cancelSearch()" v-if="!gameFound"> CANCEL
-          </base-card>
-        </div>
-      </base-card>
+    <div v-if="searching">
+      <div class="fixed top-0 left-0 w-full h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
+        <base-card class="py-7 px-20 aspect-square 2xl:w-2/5 2xl:h-2/5" background-back="lightWhite" background-front="blue" cursor="cursor-default"
+          :groupHover="false" groupName="card" :grounded=false>
+          <div class="flex flex-col justify-center items-center gap-14 2xl:w-full 2xl:h-full 2xl:justify-between">
+            <div class="text-3xl font-bold text-center 2xl:text-5xl"> {{ matchmakingText }} </div>
+            <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green"></div>
+            <base-card class="px-8 text-xl" background-back="lightWhite" background-front="green" :groupHover="true"
+              groupName="group" :grounded=false @click="cancelSearch()" v-if="!gameFound"> CANCEL
+            </base-card>
+          </div>
+        </base-card>
+      </div>
     </div>
   </div>
 </template>

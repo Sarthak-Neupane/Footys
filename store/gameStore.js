@@ -17,7 +17,7 @@ export const useGameStore = defineStore('game', () => {
 
   const intervalId = ref(null)
 
-  const timer = ref(20)
+  const timer = ref(30)
 
   const setGameId = id => {
     gameId.value = id
@@ -85,14 +85,14 @@ export const useGameStore = defineStore('game', () => {
   })
 
   const startTimer = () => {
-    timer.value = 20
+    timer.value = 30
     intervalId.value = setInterval(() => {
       timer.value--
     }, 1000)
   }
 
   const resetTimer = () => {
-    timer.value = 20
+    timer.value = 30
     clearInterval(intervalId.value)
   }
 
@@ -108,7 +108,7 @@ export const useGameStore = defineStore('game', () => {
     playerTurn.value = true
     playerGuesses.value = []
     opponenetGuesses.value = []
-    timer.value = 20
+    timer.value = 30
     clearInterval(intervalId.value)
   }
 

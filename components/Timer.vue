@@ -38,7 +38,7 @@ const strokeDashArray = computed(() => {
 })
 
 const strokeDashOffsetValue = computed(() => {
-    return (strokeDashArray.value / 20) * (getTimer.value - 20)
+    return (strokeDashArray.value / 30) * (getTimer.value - 30)
 })
 
 </script>
