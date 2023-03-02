@@ -91,16 +91,3 @@ const Instructions = [
 
 
 </script>
-<!-- 
-<style scoped>
-.box-enter-active,
-.box-leave-active {
-    transition: all 0.5s ease;
-}
-
-.box-enter-from,
-.box-leave-to {
-    opacity: 0;
-    /* transform: translateX(30px); */
-}
-</style> -->
