@@ -30,8 +30,8 @@ export default async (_nitroApp) => {
   
   const port = 8000
 
-  httpServer.listen(port, ()=>{
-    console.log(`Listening on port ${port}`)
+  httpServer.listen(port, '0.0.0.0', () => {
+    console.log(`listening on *:${port}`)
   })
 
   httpServer.on('error', (e) => {
@@ -39,7 +39,7 @@ export default async (_nitroApp) => {
       console.log('Address in use, retrying...');
       setTimeout(() => {
         httpServer.close();
-        httpServer.listen(5000, host);
+        httpServer.listen(port)
       }, 1000);
     }
   });

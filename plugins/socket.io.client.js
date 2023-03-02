@@ -1,17 +1,17 @@
 import io from 'socket.io-client'
 
-console.log(location.host)
-// const socket = io(`${protocol}://${location.host}`)
-// const socket = io(`https://${location.host}:10000`)
-// const socket = io(`http://0.0.0.0:3000`)
-// const socket = io('http://0.0.0.0:10000')
+console.log(process)
+let socket
 
-const socket = io('http://localhost:8000')
+if(process.dev){
+    console.log('dev')
+    socket = io('http://localhost:8000')
+}else{
+    console.log('prod')
+    socket = io('https://ficfacfoe.onrender.com:8000')
+}
 
-export default defineNuxtPlugin((NuxtApp) => {
-    return {
-        provide: {
-            socket: socket
-        }
-    }
+export default defineNuxtPlugin(NuxtApp => {
+    NuxtApp.provide('socket', socket)
+    console.log('socket.io client plugin loaded')
 })
