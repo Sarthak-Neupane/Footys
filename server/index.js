@@ -34,7 +34,7 @@ export default async _nitroApp => {
         'https://admin.socket.io',
         'http://localhost:3000',
         'http://localhost:8000',
-        'http://192.168.101.10:3000'
+        'https://ficfacfoe.onrender.com'
       ]
     }
   })
