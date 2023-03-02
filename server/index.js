@@ -14,8 +14,9 @@ const randomNumber = (min, max, exclude) => {
   }
 }
 
-export default async _nitroApp => {
+export default async (_nitroApp) => {
   const config = useRuntimeConfig()
+
   try {
     await mongoose.connect(config.mongodbURI)
     console.log('connected to mongo db')
@@ -26,7 +27,23 @@ export default async _nitroApp => {
   const app = express()
   const httpServer = createServer(app)
 
-  httpServer.listen(8000)
+  
+  const port = 8000
+  const host = 'localhost'
+
+  httpServer.listen(port, host, ()=>{
+    console.log(`Server is running on ${host}:${port}`)
+  })
+
+  httpServer.on('error', (e) => {
+    if (e.code === 'EADDRINUSE') {
+      console.log('Address in use, retrying...');
+      setTimeout(() => {
+        httpServer.close();
+        httpServer.listen(5000, host);
+      }, 1000);
+    }
+  });
 
   const io = new Server(httpServer, {
     cors: {
