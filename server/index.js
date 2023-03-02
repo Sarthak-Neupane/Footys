@@ -30,8 +30,8 @@ export default async (_nitroApp) => {
   
   const port = 8000
 
-  httpServer.listen(port, '127.0.0.1', () => {
-    console.log(`listening on *:${port}`)
+  httpServer.listen(port, () => {
+    console.log(`listening on :${port}`)
   })
 
   httpServer.on('error', (e) => {
