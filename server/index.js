@@ -34,15 +34,6 @@ export default async (_nitroApp) => {
     console.log(`listening on :${port}`)
   })
 
-  httpServer.on('error', (e) => {
-    if (e.code === 'EADDRINUSE') {
-      console.log('Address in use, retrying...');
-      setTimeout(() => {
-        httpServer.close();
-        httpServer.listen(port)
-      }, 1000);
-    }
-  });
 
   const io = new Server(httpServer, {
     cors: {
