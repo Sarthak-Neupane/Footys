@@ -15,6 +15,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     mongodbURI: process.env.MONGODB_URI,
+    
   },
 
   colorMode: {
