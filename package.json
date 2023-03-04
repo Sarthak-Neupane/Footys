@@ -21,6 +21,7 @@
     "@socket.io/admin-ui": "^0.5.1",
     "@vueuse/core": "^9.13.0",
     "confetti-js": "^0.0.18",
+    "cors": "^2.8.5",
     "express": "^4.18.2",
     "gsap": "^3.11.4",
     "js-confetti": "^0.11.0",

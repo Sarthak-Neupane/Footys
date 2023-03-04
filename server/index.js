@@ -4,6 +4,7 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import { instrument } from '@socket.io/admin-ui'
 import { v4 as uuidv4 } from 'uuid'
+import cors from 'cors'
 
 const randomNumber = (min, max, exclude) => {
   const number = Math.floor(Math.random() * (max - min + 1)) + min
@@ -25,6 +26,7 @@ export default async (_nitroApp) => {
   }
 
   const app = express()
+  app.use(cors())
   const httpServer = createServer(app)
 
   
