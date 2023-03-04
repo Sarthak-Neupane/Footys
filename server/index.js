@@ -6,8 +6,6 @@ import { instrument } from '@socket.io/admin-ui'
 import { v4 as uuidv4 } from 'uuid'
 import cors from 'cors'
 
-// const port = process.env.PORT || 3000
-// const isProd = process.env.NODE_ENV === 'production'
 
 const randomNumber = (min, max, exclude) => {
   const number = Math.floor(Math.random() * (max - min + 1)) + min
@@ -33,11 +31,14 @@ export default async (_nitroApp) => {
   const httpServer = createServer(app)
 
   
-  // const port = 8000
+  const port = 8000
+  const host = process.env.HOST || 'localhost'
 
-  // httpServer.listen(port, () => {
-  //   console.log(`listening on :${port}`)
-  // })
+  httpServer.listen(port, host, () => {
+    console.log(host)
+    console.log(port)
+    console.log(`listening on ${host}:${port}`)
+  })
 
 
   const io = new Server(httpServer, {
