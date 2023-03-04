@@ -37,6 +37,7 @@ export default async (_nitroApp) => {
   httpServer.listen(port, host, () => {
     console.log(host)
     console.log(port)
+    console.log(process.env)
     console.log(`listening on ${host}:${port}`)
   })
 

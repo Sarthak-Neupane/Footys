@@ -1,6 +1,7 @@
 import io from 'socket.io-client'
 
-const socket = io('http://localhost:8000')
+const config = useRuntimeConfig()
+const socket = io(config.baseUrl)
 
 export default defineNuxtPlugin(NuxtApp => {
     NuxtApp.provide('socket', socket)

@@ -15,6 +15,10 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     mongodbURI: process.env.MONGODB_URI,
+
+    public: {
+      baseURL : process.env.BASE_URL || "http://localhost:8000",
+    }
   },
 
   colorMode: {
