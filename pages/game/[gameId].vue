@@ -261,7 +261,7 @@ watch(playerDecidedToLeave, (current, previous) => {
       $router.push('/')
     }
   } else {
-    console.log('HAHAHAHA')
+    
   }
 })
 
@@ -335,9 +335,9 @@ const sendGuessToStore = (e) => {
 
   // change the player turn in the localstate 
   store.resetTimer()
-  store.changePlayerTurn()
-  store.startTimer()
-  $socket.emit('changeTurn', { id: player.value, gameId: store.gameId })
+  if(store.playerTurn){
+    $socket.emit('changeTurn', { id: player.value, gameId: store.gameId })
+  }
 }
 
 // emit event 'gameDecided' to the server after 'grid' component emits the 'game-ended' event
@@ -396,8 +396,8 @@ const socketEvents = () => {
 
   // change the current turn if the server emits a 'changeTurn' event
   $socket.on('changeTurn', (e) => {
-    store.changePlayerTurn(e)
     store.resetTimer()
+    store.changePlayerTurn(e)
     store.startTimer()
   })
 

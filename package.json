@@ -21,6 +21,7 @@
     "@nuxtjs/google-fonts": "^2.0.0",
     "@pinia/nuxt": "^0.4.7",
     "@socket.io/admin-ui": "^0.5.1",
+    "@types/uuid": "^9.0.1",
     "@vueuse/core": "^9.13.0",
     "confetti-js": "^0.0.18",
     "cors": "^2.8.5",
@@ -30,6 +31,7 @@
     "mongoose": "^6.9.1",
     "pinia": "^2.0.32",
     "puppeteer": "^19.6.3",
+    "save-dev": "^0.0.1-security",
     "socket.io": "^4.6.1",
     "socket.io-client": "^4.6.1",
     "uuid": "^9.0.0"

@@ -8,7 +8,7 @@
             </li>
         </ul>
     </div>
-    <input type="text" id="playerSearch" v-model.trim="searchValue" @input="checkTyping()"
+    <input type="text" id="playerSearch" :value="searchValue" @input="checkTyping"
         class="border-solid border-lightBlack focus:outline-none border-b-2 w-full px-5 py-3 bg-lightWhite"
         :class="getPlayerColor === 'green' ? 'focus:border-green' : 'focus:border-blue'" />
     <label for="playerSearch"
@@ -37,7 +37,10 @@ const labelInput = ref("Search Player");
 const players = ref([])
 
 
-const checkTyping = async () => {
+const checkTyping = async (event) => {
+
+    searchValue.value = event.target.value
+
     if (searchValue.value.length > 0) {
         labelInput.value = "";
     } else {

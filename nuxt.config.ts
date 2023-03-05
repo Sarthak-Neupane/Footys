@@ -18,7 +18,8 @@ export default defineNuxtConfig({
     mongodbURI: process.env.MONGODB_URI,
 
     public: {
-      socketURL: process.env.SOCKET_URL || "http://localhost:3000",
+      socketURL: process.env.SOCKET_URL || "http://localhost:8000",
+      environment: process.env.NODE_ENV || "development",
     }
   },
 

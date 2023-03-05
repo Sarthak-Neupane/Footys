@@ -11,7 +11,7 @@ export const useGameStore = defineStore('game', () => {
   const currentSocketId = ref(null)
   const playerColor = ref(null)
   const opponentColor = ref(null)
-  const playerTurn = ref(true)
+  const playerTurn = ref(null)
   const playerGuesses = ref([])
   const opponenetGuesses = ref([])
 
@@ -62,8 +62,12 @@ export const useGameStore = defineStore('game', () => {
   const setInitialPlayerTurn = e => {
     playerTurn.value = e
   }
-  const changePlayerTurn = () => {
-    playerTurn.value = !playerTurn.value
+  const changePlayerTurn = (e) => {
+    if(e.player === currentPlayer.value) {
+      playerTurn.value = false
+    } else {
+      playerTurn.value = true
+    }
   }
   
   const getPlayerGuesses = computed(() => {

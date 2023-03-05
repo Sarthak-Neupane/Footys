@@ -41,7 +41,7 @@ const initiateFirstRow = async (clubToCheckFor, initialClubs) => {
   if (players.length === 3) {
     return players
   } else {
-    console.log('Did not satisfy')
+    // console.log('Did not satisfy')
     return []
   }
 }
@@ -77,9 +77,9 @@ export default defineEventHandler(async () => {
     if (matchedPlayersArray.length === 3) {
       secondaryClubs.push(club)
       matches.push(matchedPlayersArray)
-      console.log(`We did ${matches.length}`)
+      // console.log(`We did ${matches.length}`)
     } else {
-      console.log(' We loop again ')
+      // console.log(' We loop again ')
     }
   }
 

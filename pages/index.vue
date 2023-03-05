@@ -4,8 +4,8 @@
       <logo-name class="font-black text-6xl xl:text-8xl" foe-color="blue"></logo-name>
       <div class="flex flex-col justify-center items-center gap-12 text-center text-3xl">
         <nuxt-link to="/how-to-play">
-        <base-card background-back="lightWhite" background-front="blue" cursor="cursor-pointer" :group-hover=true
-          group-name="group" :grounded=false>  INSTRUCTIONS </base-card> </nuxt-link> 
+          <base-card background-back="lightWhite" background-front="blue" cursor="cursor-pointer" :group-hover=true
+            group-name="group" :grounded=false> INSTRUCTIONS </base-card> </nuxt-link>
         <base-card background-back="lightWhite" background-front="blue" cursor="cursor-pointer" :group-hover=true
           group-name="group" :grounded=false @click="findAGame()"> PLAY ONLINE
         </base-card>
@@ -13,8 +13,8 @@
     </div>
     <div v-if="searching">
       <div class="fixed top-0 left-0 w-full h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
-        <base-card class="py-7 px-20 aspect-square 2xl:w-2/5 2xl:h-2/5" background-back="lightWhite" background-front="blue" cursor="cursor-default"
-          :groupHover="false" groupName="card" :grounded=false>
+        <base-card class="py-7 px-20 aspect-square 2xl:w-2/5 2xl:h-2/5" background-back="lightWhite"
+          background-front="blue" cursor="cursor-default" :groupHover="false" groupName="card" :grounded=false>
           <div class="flex flex-col justify-center items-center gap-14 2xl:w-full 2xl:h-full 2xl:justify-between">
             <div class="text-3xl font-bold text-center 2xl:text-5xl"> {{ matchmakingText }} </div>
             <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green"></div>
@@ -126,18 +126,27 @@ const socketEvents = () => {
 
     }
   })
+
+  $socket.on('disconnect', () => {
+    console.log('You have been disconnected')
+    // $router.push('/')
+  })
 }
 // SOCKET EVENTS ENDS
 
-
-if($socket){
-  $socket.on('connect', () => {
+if ($socket) {
+  if ($socket.connected) {
     console.log('connected')
     socketEvents()
-  })
+  } else {
+    $socket.on('connect', () => {
+      console.log('connected')
+      socketEvents()
+    })
+  }
 } else {
   console.log('not connected')
-  $router.push('/')
+  // $router.push('/')
 }
 
 
