@@ -6,6 +6,8 @@ import io from 'socket.io-client'
 export default defineNuxtPlugin(NuxtApp => {
 
     const config = useRuntimeConfig()
-    const socket = io(config.public.socketURL)
+    const socket = io(config.public.socketURL, {
+        path: '/'
+    })
     NuxtApp.provide('socket', socket)
 })
