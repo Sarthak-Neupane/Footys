@@ -98,8 +98,6 @@ const socketEvents = () => {
 
   // check to see if the client has joined the game. If yes, set the game id into the store. 
   $socket.on('gameJoined', (data) => {
-
-
     matchmakingText.value = `Joining game...`
 
   })
@@ -132,12 +130,23 @@ const socketEvents = () => {
 // SOCKET EVENTS ENDS
 
 
-// REGISTER SOCKET EVENTS IF THE SOCKET IS CONNECTED
-if ($socket && $socket.connected) {
-  console.log('connected')
-  socketEvents()
+if($socket){
+  $socket.on('connect', () => {
+    console.log('connected')
+    socketEvents()
+  })
 } else {
   console.log('not connected')
   $router.push('/')
 }
+
+
+// REGISTER SOCKET EVENTS IF THE SOCKET IS CONNECTED
+// if ($socket && $socket.connected) {
+//   console.log('connected')
+//   socketEvents()
+// } else {
+//   console.log('not connected')
+//   $router.push('/')
+// }
 </script>

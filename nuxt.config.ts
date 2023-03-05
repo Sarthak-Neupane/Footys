@@ -5,7 +5,7 @@ export default defineNuxtConfig({
     "@nuxtjs/color-mode",
     "nuxt-icon",
     "@pinia/nuxt",
-    "~/modules/ws-server.js",
+    // "~/modules/ws-server.js",
   ],
 
   ssr: true,

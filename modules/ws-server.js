@@ -15,9 +15,12 @@ const randomNumber = (min, max, exclude) => {
 export default defineNuxtModule({
   setup (options, nuxt) {
     nuxt.hook('listen', async server => {
-      const io = new Server(server)
-        
-      console.log(server)
+      const io = new Server(server, {
+        cors: {
+            origin: '*',
+            methods: ['GET', 'POST']
+        }
+      })
     
       nuxt.hook('close', () => io.close())
 
