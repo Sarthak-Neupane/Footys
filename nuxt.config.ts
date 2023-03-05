@@ -10,21 +10,15 @@ export default defineNuxtConfig({
   ssr: true,
   
   nitro: {
-    plugins: ["~/server/index.js"],
+    plugins: ["~/server/plugins/mongo.js", "~/server/plugins/socket.js"],
   },
 
   runtimeConfig: {
     mongodbURI: process.env.MONGODB_URI,
-
-    public: {
-      baseURL : process.env.BASE_URL || "http://localhost:8000",
-    }
   },
 
   colorMode: {
     classSuffix: "",
-    preference: "system",
-    // fallback: 'light',
   },
 
   pinia: {

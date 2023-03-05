@@ -1,10 +1,9 @@
-import mongoose from 'mongoose'
-import express from 'express'
-import { createServer } from 'http'
+// import express from 'express'
+// import { createServer } from 'http'
 import { Server } from 'socket.io'
 import { instrument } from '@socket.io/admin-ui'
 import { v4 as uuidv4 } from 'uuid'
-import cors from 'cors'
+// import cors from 'cors'
 
 
 const randomNumber = (min, max, exclude) => {
@@ -17,32 +16,21 @@ const randomNumber = (min, max, exclude) => {
 }
 
 export default async (_nitroApp) => {
-  const config = useRuntimeConfig()
 
-  try {
-    await mongoose.connect(config.mongodbURI)
-    console.log('connected to mongo db')
-  } catch (e) {
-    console.log(e)
-  }
-
-  const app = express()
-  app.use(cors())
-  const httpServer = createServer(app)
+//   const app = express()
+//   app.use(cors())
+//   const httpServer = createServer(app)
 
   
-  const port = 8000
-  const host = process.env.HOST || 'localhost'
+  // const port = process.env.PORT || 8000
+  // const host = process.env.HOST || 'localhost'
 
-  httpServer.listen(port, host, () => {
-    console.log(host)
-    console.log(port)
-    console.log(process.env)
-    console.log(`listening on ${host}:${port}`)
-  })
+  // httpServer.listen(port, host, () => {
+  //   console.log(`listening on ${host}:${port}`)
+  // })
 
 
-  const io = new Server(httpServer, {
+  const io = new Server(8000, {
     cors: {
       origin: [
         'https://admin.socket.io',
@@ -62,8 +50,6 @@ export default async (_nitroApp) => {
     const clients = io.of('/').adapter.rooms.get('lobby')
     const numClients = [...(clients ? clients : 0)]
     if (numClients.length > 1) {
-      // const player1 = numClients[0]
-      // const player2 = numClients[1]
       const gameRoomId = uuidv4()
       const gameRoom = gameRoomId.replace(/-/g, "")
 
@@ -73,16 +59,6 @@ export default async (_nitroApp) => {
       })
     } else {
       console.log('no game found')
-    }
-  }
-
-  const checkBothPlayersJoined = (socket, data) => {
-    const clients = io.of('/').adapter.rooms.get(data.gameId)
-    const numClients = [...(clients ? clients : 0)]
-    if (numClients.length === 2) {
-      return true
-    } else {
-      return false
     }
   }
 
