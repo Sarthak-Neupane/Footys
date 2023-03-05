@@ -5,19 +5,20 @@ export default defineNuxtConfig({
     "@nuxtjs/color-mode",
     "nuxt-icon",
     "@pinia/nuxt",
+    "~/modules/ws-server.js",
   ],
 
   ssr: true,
   
   nitro: {
-    plugins: ["~/server/plugins/mongo.js", "~/server/plugins/socket.js"],
+    plugins: ["~/server/plugins/mongo.js"],
   },
 
   runtimeConfig: {
     mongodbURI: process.env.MONGODB_URI,
 
     public: {
-      socketURL: process.env.SOCKET_URL || "http://localhost:8000",
+      socketURL: process.env.SOCKET_URL || "http://localhost:3000",
     }
   },
 
