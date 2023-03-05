@@ -2,7 +2,6 @@ import { Server } from 'socket.io'
 import { instrument } from '@socket.io/admin-ui'
 import { v4 as uuidv4 } from 'uuid'
 import { defineNuxtModule } from '@nuxt/kit'
-import { computedWithControl } from '@vueuse/core'
 
 const randomNumber = (min, max, exclude) => {
   const number = Math.floor(Math.random() * (max - min + 1)) + min
