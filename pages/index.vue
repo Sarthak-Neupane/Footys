@@ -59,6 +59,12 @@ onBeforeMount(async () => {
     localStorage.setItem('id', uuidv4())
   }
   store.setCurrentPlayer(localStorage.getItem('id'))
+  const { pending, data: value } = useLazyFetch('/api/Main/getConnected', {
+    query: {
+      id: store.getCurrentPlayer
+    }
+  })
+  console.log(value)
 })
 
 // join the lobby for matchmaking
@@ -132,6 +138,7 @@ const socketEvents = () => {
     // $router.push('/')
   })
 }
+
 // SOCKET EVENTS ENDS
 
 if ($socket) {
@@ -146,16 +153,5 @@ if ($socket) {
   }
 } else {
   console.log('not connected')
-  // $router.push('/')
 }
-
-
-// REGISTER SOCKET EVENTS IF THE SOCKET IS CONNECTED
-// if ($socket && $socket.connected) {
-//   console.log('connected')
-//   socketEvents()
-// } else {
-//   console.log('not connected')
-//   $router.push('/')
-// }
 </script>

@@ -41,7 +41,7 @@ const initiateFirstRow = async (clubToCheckFor, initialClubs) => {
   if (players.length === 3) {
     return players
   } else {
-    // console.log('Did not satisfy')
+    console.log('Did not satisfy')
     return []
   }
 }
