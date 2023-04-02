@@ -1,4 +1,9 @@
 <template>
+  <ClientOnly>
+    <base-error background-front="blue" v-if="socketError.value">
+      You are already connected in other tab
+  </base-error>
+</ClientOnly>
   <div class="h-screen grid content-center bg-green">
     <div class="container flex flex-col justify-center items-center gap-20 mx-auto">
       <logo-name class="font-black text-6xl xl:text-8xl" foe-color="blue"></logo-name>
@@ -50,7 +55,11 @@ const gameFound = ref(null)
 const joiningGameIn = ref(3)
 const timeout = ref(0)
 
-
+// refs for socket errors
+const socketError = reactive({
+  value: false,
+  message: ''
+})
 
 // set the player id if it doesn't exist
 onBeforeMount(async () => {
@@ -59,16 +68,11 @@ onBeforeMount(async () => {
     localStorage.setItem('id', uuidv4())
   }
   store.setCurrentPlayer(localStorage.getItem('id'))
-  const { pending, data: value } = useLazyFetch('/api/Main/getConnected', {
-    query: {
-      id: store.getCurrentPlayer
-    }
-  })
-  console.log(value)
 })
 
 // join the lobby for matchmaking
 const findAGame = () => {
+  if(socketError.value) return
   searching.value = true;
   gameFound.value = false;
   matchmakingText.value = 'FINDING A GAME'
@@ -105,7 +109,6 @@ const socketEvents = () => {
   // check to see if the client has joined the game. If yes, set the game id into the store. 
   $socket.on('gameJoined', (data) => {
     matchmakingText.value = `Joining game...`
-
   })
 
   $socket.on('bothPlayersJoined', (data) => {
@@ -135,23 +138,21 @@ const socketEvents = () => {
 
   $socket.on('disconnect', () => {
     console.log('You have been disconnected')
-    // $router.push('/')
   })
 }
 
-// SOCKET EVENTS ENDS
 
+
+// SOCKET EVENTS ENDS
 if ($socket) {
-  if ($socket.connected) {
-    console.log('connected')
+  if($socket.connected) {
     socketEvents()
   } else {
-    $socket.on('connect', () => {
-      console.log('connected')
-      socketEvents()
-    })
+    socketError.value = true
+    socketError.message = $socket.customError
   }
 } else {
-  console.log('not connected')
+  console.log('not instantiated')
 }
+
 </script>
