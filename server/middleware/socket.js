@@ -2,7 +2,10 @@ import { Server } from 'socket.io'
 import { instrument } from '@socket.io/admin-ui'
 import { v4 as uuidv4 } from 'uuid'
 
-let io
+let io;
+let currentTimer = null;
+
+
 const randomNumber = (min, max, exclude) => {
   const number = Math.floor(Math.random() * (max - min + 1)) + min
   if (!exclude.includes(number)) {
@@ -14,7 +17,7 @@ const randomNumber = (min, max, exclude) => {
 
 const registerTimer = (socket, data) => {
   const timer = setInterval(() => {
-    io.to(data.gameId).emit('timer', {
+    io.to(socket.id).emit('timer', {
       time: data.time
     })
     data.time--
@@ -105,8 +108,11 @@ export default defineEventHandler(({ node }) => {
       socket.on('gameStart', data => {
         gameStart(socket, data)
       })
-      socket.on('guess', data => {
-        guess(socket, data)
+      socket.on('startTimer', data => {
+        startTimer(socket, data)
+      })
+      socket.on('checkAnswer', data => {
+        checkAnswer(socket, data)
       })
       socket.on('changeTurn', data => {
         changeTurn(socket, data)
@@ -164,9 +170,13 @@ export default defineEventHandler(({ node }) => {
       })
     }
 
-    const guess = (socket, data) => {
+    const startTimer = (socket, data) => {
+      currentTimer = registerTimer(socket, { gameId: data.gameId, time: 30 })
+    }
+
+    const checkAnswer = (socket, data) => {
       socket.to(data.gameId).emit('guess', {
-        guess: data.guess,
+        guess: data.answer,
         player: data.id
       })
     }

@@ -199,6 +199,7 @@ onBeforeMount(async () => {
       gameStartsIn.value--
     } else {
       gameNotStarted.value = false
+      $socket.emit('startTimer', { id: player.value, gameId: store.gameId })
       clearInterval(interval)
     }
   }, 1000)
@@ -314,8 +315,8 @@ const sendGuessToEmit = (e) => {
   }
 
   // emitting a guess event to server and sending the current guess, along with the player id
-  $socket.emit('guess', {
-    guess: {
+  $socket.emit('checkAnswer', {
+    answer: {
       ...e,
     }, id: player.value, gameId: store.gameId
   })
@@ -369,6 +370,10 @@ const cancelSearch = () => {
 const socketEvents = () => {
 
   // INITIAL GAME SOCKET EVENTS STARTS
+
+  $socket.on('timer', (e) => {
+    console.log(e)
+  })
 
   // decide who goes first, and also set who gets which color
   $socket.on('startGame', (e) => {
