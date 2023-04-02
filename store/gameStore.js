@@ -89,15 +89,15 @@ export const useGameStore = defineStore('game', () => {
   })
 
   const startTimer = () => {
-    timer.value = 30
-    intervalId.value = setInterval(() => {
-      timer.value--
-    }, 1000)
+    // timer.value = 30
+    // intervalId.value = setInterval(() => {
+    //   timer.value--
+    // }, 1000)
   }
 
   const resetTimer = () => {
-    timer.value = 30
-    clearInterval(intervalId.value)
+    // timer.value = 30
+    // clearInterval(intervalId.value)
   }
 
 

@@ -174,7 +174,7 @@ const player = ref(null)
 const currentAnswer = ref({});
 
 // the current timer
-const { getTimer } = storeToRefs(store)
+// const { getTimer } = storeToRefs(store)
 
 // ref for the confetti canvas
 const canvas = ref(null)
@@ -199,7 +199,6 @@ onBeforeMount(async () => {
       gameStartsIn.value--
     } else {
       gameNotStarted.value = false
-      store.startTimer()
       clearInterval(interval)
     }
   }, 1000)
@@ -243,14 +242,13 @@ onBeforeRouteLeave((to, from, next) => {
 // WATCHERS START ------------------------------------------------
 
 // watcher to check if the current turn is over 
-watch(getTimer, (current, previous) => {
-  if (current === 0 && playerTurn.value) {
-    store.resetTimer()
-    sendGuessToEmit({
-      isEmpty: true,
-    })
-  }
-})
+// watch(getTimer, (current, previous) => {
+//   if (current === 0 && playerTurn.value) {
+//     sendGuessToEmit({
+//       isEmpty: true,
+//     })
+//   }
+// })
 
 watch(playerDecidedToLeave, (current, previous) => {
   if (current === true) {
@@ -334,7 +332,6 @@ const sendGuessToStore = (e) => {
   }
 
   // change the player turn in the localstate 
-  store.resetTimer()
   if(store.playerTurn){
     $socket.emit('changeTurn', { id: player.value, gameId: store.gameId })
   }
@@ -342,7 +339,6 @@ const sendGuessToStore = (e) => {
 
 // emit event 'gameDecided' to the server after 'grid' component emits the 'game-ended' event
 const gameEnded = (e) => {
-  store.resetTimer()
   if (e.isDraw === true) {
     $socket.emit('gameDecided', { winner: null, gameId: store.gameId })
   } else {
@@ -396,14 +392,11 @@ const socketEvents = () => {
 
   // change the current turn if the server emits a 'changeTurn' event
   $socket.on('changeTurn', (e) => {
-    store.resetTimer()
     store.changePlayerTurn(e)
-    store.startTimer()
   })
 
   // check if the 'gameDecided is emitted by the server'
   $socket.on('gameDecided', (e) => {
-    store.resetTimer()
     // check if the game has a winner
     if (e.winner) {
       // If Yes...
@@ -487,7 +480,6 @@ const socketEvents = () => {
       store.setResult('win')  // set the result of the current player
       store.setWinner(player.value)    // set the winner of the game
       $confetti.addConfetti()
-      store.resetTimer()
     }
   })
 

@@ -12,6 +12,24 @@ const randomNumber = (min, max, exclude) => {
   }
 }
 
+const registerTimer = (socket, data) => {
+  const timer = setInterval(() => {
+    io.to(data.gameId).emit('timer', {
+      time: data.time
+    })
+    data.time--
+    if (data.time === 0) {
+      clearInterval(timer)
+    }
+  }, 1000)
+
+  return timer
+}
+
+const clearTimer = timer => {
+  clearInterval(timer)
+}
+
 export default defineEventHandler(({ node }) => {
   if (!io) {
     if (process.env.NODE_ENV === 'production') {
