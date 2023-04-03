@@ -141,8 +141,6 @@ const socketEvents = () => {
   })
 }
 
-
-
 // SOCKET EVENTS ENDS
 if ($socket) {
   if($socket.connected) {
@@ -152,7 +150,7 @@ if ($socket) {
     socketError.message = $socket.customError
   }
 } else {
-  console.log('not instantiated')
+  // console.log('not instantiated')
 }
 
 </script>

@@ -3,8 +3,8 @@ import { instrument } from '@socket.io/admin-ui'
 import { v4 as uuidv4 } from 'uuid'
 
 let io;
-let currentTimer = null;
-
+let currentRooms = [];
+let connectedSockets = [];
 
 const randomNumber = (min, max, exclude) => {
   const number = Math.floor(Math.random() * (max - min + 1)) + min
@@ -17,15 +17,14 @@ const randomNumber = (min, max, exclude) => {
 
 const registerTimer = (socket, data) => {
   const timer = setInterval(() => {
-    io.to(socket.id).emit('timer', {
+    io.to(data.gameId).emit('timer', {
       time: data.time
     })
     data.time--
-    if (data.time === 0) {
+    if (data.time < 0) {
       clearInterval(timer)
     }
   }, 1000)
-
   return timer
 }
 
@@ -81,17 +80,15 @@ export default defineEventHandler(({ node }) => {
     })
 
     io.use(async (socket, next) => {
-      const sockets = await io.fetchSockets()
-      const socketIds = sockets.map(s => s.customId)
-      if (socketIds.includes(socket.customId)) {
+      if (connectedSockets.includes(socket.customId)) {
         return next(new Error('Already Connected, Please Close Connected Tabs'))
       }
       next()
     })
 
     io.on('connection', async socket => {
-
-      console.log(`${socket.customId} connected`)
+      connectedSockets.push(socket.customId)
+      console.log('connected sockets', connectedSockets)
 
       socket.on('joinLobby', data => {
         joinLobby(socket, data)
@@ -108,8 +105,19 @@ export default defineEventHandler(({ node }) => {
       socket.on('gameStart', data => {
         gameStart(socket, data)
       })
-      socket.on('startTimer', data => {
-        startTimer(socket, data)
+      socket.on('ready', data => {
+        const exactRoom = currentRooms.find(room => room.id === data.gameId)
+        if(data.playerTurn){
+          exactRoom.playersReady[0] = true
+        } else {
+          exactRoom.playersReady[1] = true
+        }
+        if(exactRoom.playersReady[0] && exactRoom.playersReady[1]){
+          exactRoom.timer = registerTimer(socket, {
+            gameId: data.gameId,
+            time: 30
+          })
+        }
       })
       socket.on('checkAnswer', data => {
         checkAnswer(socket, data)
@@ -128,11 +136,16 @@ export default defineEventHandler(({ node }) => {
         socket.to(data.gameId).emit('userLeft', socket.id)
       })
       socket.on('disconnecting', reason => {
+        console.log(`${socket.customId} disconnecting`)
+        connectedSockets = connectedSockets.filter(s => s !== socket.customId)
         for (const room of socket.rooms) {
           if (room !== socket.id) {
             socket.to(room).emit('userLeft', socket.id)
           }
         }
+      })
+      socket.on('disconnected', reason => {
+        console.log(`${socket.customId} disconnected`)
       })
     })
 
@@ -168,10 +181,6 @@ export default defineEventHandler(({ node }) => {
         color1: number === 0 ? 'green' : 'blue',
         color2: number === 0 ? 'blue' : 'green'
       })
-    }
-
-    const startTimer = (socket, data) => {
-      currentTimer = registerTimer(socket, { gameId: data.gameId, time: 30 })
     }
 
     const checkAnswer = (socket, data) => {
@@ -214,6 +223,12 @@ export default defineEventHandler(({ node }) => {
         const numClients = [...(clients ? clients : 0)]
         // if there are two clients, start a game
         if (numClients.length === 2) {
+          currentRooms.push({
+            id: room,
+            players: numClients,
+            playersReady: [false, false],
+            timer: null
+          })
           const data = await $fetch('/api/Clubs/getClubs')
           io?.to(room).emit('bothPlayersJoined', {
             gameId: room,

@@ -8,6 +8,8 @@ export default defineNuxtPlugin(NuxtApp => {
   let socketError
   let customId = localStorage.getItem('id')
 
+  console.log(customId)
+
   if (!customId) {
     customId = uuidv4()
   }
@@ -28,6 +30,8 @@ export default defineNuxtPlugin(NuxtApp => {
 
   socket.on('connect', () => {
     console.log('connected')
+    socketError = null
+    socket.customError = null
   })
 
   socket.on('connect_error', err => {

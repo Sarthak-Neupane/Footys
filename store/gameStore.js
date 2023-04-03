@@ -88,18 +88,9 @@ export const useGameStore = defineStore('game', () => {
     return timer.value
   })
 
-  const startTimer = () => {
-    // timer.value = 30
-    // intervalId.value = setInterval(() => {
-    //   timer.value--
-    // }, 1000)
+  const setTimer = (e) => {
+    timer.value = e
   }
-
-  const resetTimer = () => {
-    // timer.value = 30
-    // clearInterval(intervalId.value)
-  }
-
 
   const resetGame = () => {
     gameId.value = null
@@ -140,8 +131,7 @@ export const useGameStore = defineStore('game', () => {
     getOpponentGuesses,
     addOpponentGuess,
     getTimer,
-    startTimer,
-    resetTimer,
+    setTimer,
     resetGame
   }
 })

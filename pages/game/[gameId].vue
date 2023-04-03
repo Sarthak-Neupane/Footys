@@ -199,7 +199,7 @@ onBeforeMount(async () => {
       gameStartsIn.value--
     } else {
       gameNotStarted.value = false
-      $socket.emit('startTimer', { id: player.value, gameId: store.gameId })
+      $socket.emit('ready', { id: player.value, gameId: store.gameId, playerTurn: store.playerTurn })
       clearInterval(interval)
     }
   }, 1000)
@@ -372,7 +372,7 @@ const socketEvents = () => {
   // INITIAL GAME SOCKET EVENTS STARTS
 
   $socket.on('timer', (e) => {
-    console.log(e)
+    store.setTimer(e.time)
   })
 
   // decide who goes first, and also set who gets which color
@@ -492,6 +492,7 @@ const socketEvents = () => {
   // PLAY AGAIN SOCKET EVENTS END ---------------------------------
 }
 // SOCKET EVENTS ENDS ------------------------------------------
+
 
 // REGISTER THE SOCKET EVENT
 if ($socket && $socket.connected) {
