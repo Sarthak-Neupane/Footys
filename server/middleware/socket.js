@@ -2,9 +2,9 @@ import { Server } from 'socket.io'
 import { instrument } from '@socket.io/admin-ui'
 import { v4 as uuidv4 } from 'uuid'
 
-let io;
-let currentRooms = [];
-let connectedSockets = [];
+let io
+let currentRooms = []
+let connectedSockets = []
 
 const randomNumber = (min, max, exclude) => {
   const number = Math.floor(Math.random() * (max - min + 1)) + min
@@ -15,6 +15,10 @@ const randomNumber = (min, max, exclude) => {
   }
 }
 
+const getExactRoom = gameId => {
+  return currentRooms.find(room => room.id === gameId)
+}
+
 const registerTimer = (socket, data) => {
   const timer = setInterval(() => {
     io.to(data.gameId).emit('timer', {
@@ -22,9 +26,10 @@ const registerTimer = (socket, data) => {
     })
     data.time--
     if (data.time < 0) {
-      clearInterval(timer)
+      clearTimer(timer)
     }
   }, 1000)
+  console.log('timer', timer)
   return timer
 }
 
@@ -106,13 +111,13 @@ export default defineEventHandler(({ node }) => {
         gameStart(socket, data)
       })
       socket.on('ready', data => {
-        const exactRoom = currentRooms.find(room => room.id === data.gameId)
-        if(data.playerTurn){
+        const exactRoom = getExactRoom(data.gameId)
+        if (data.playerTurn) {
           exactRoom.playersReady[0] = true
         } else {
           exactRoom.playersReady[1] = true
         }
-        if(exactRoom.playersReady[0] && exactRoom.playersReady[1]){
+        if (exactRoom.playersReady[0] && exactRoom.playersReady[1]) {
           exactRoom.timer = registerTimer(socket, {
             gameId: data.gameId,
             time: 30
@@ -120,6 +125,8 @@ export default defineEventHandler(({ node }) => {
         }
       })
       socket.on('checkAnswer', data => {
+        const exactRoom = getExactRoom(data.gameId)
+        clearTimer(exactRoom.timer)
         checkAnswer(socket, data)
       })
       socket.on('changeTurn', data => {
@@ -205,6 +212,11 @@ export default defineEventHandler(({ node }) => {
     const changeTurn = (socket, data) => {
       io?.to(data.gameId).emit('changeTurn', {
         player: data.id
+      })
+      const exactRoom = getExactRoom(data.gameId)
+      exactRoom.timer = registerTimer(socket, {
+        gameId: data.gameId,
+        time: 30
       })
     }
 
