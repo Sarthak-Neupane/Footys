@@ -5,6 +5,9 @@ import { v4 as uuidv4 } from 'uuid'
 let io
 let currentRooms = []
 let connectedSockets = []
+let connectedIds = []
+
+
 
 const randomNumber = (min, max, exclude) => {
   const number = Math.floor(Math.random() * (max - min + 1)) + min
@@ -19,6 +22,11 @@ const getExactRoom = gameId => {
   return currentRooms.find(room => room.id === gameId)
 }
 
+const getPlayerIdFromSocketId = socketId => {
+  const player = connectedIds.find(player => player.socketId === socketId)
+  return player.id
+}
+
 const registerTimer = (socket, data) => {
   const timer = setInterval(() => {
     io.to(data.gameId).emit('timer', {
@@ -29,7 +37,6 @@ const registerTimer = (socket, data) => {
       clearTimer(timer)
     }
   }, 1000)
-  console.log('timer', timer)
   return timer
 }
 
@@ -71,7 +78,7 @@ export default defineEventHandler(({ node }) => {
           players: numClients
         })
       } else {
-        console.log('no game found')
+        // console.log('no game found')
       }
     }
 
@@ -93,7 +100,11 @@ export default defineEventHandler(({ node }) => {
 
     io.on('connection', async socket => {
       connectedSockets.push(socket.customId)
-      console.log('connected sockets', connectedSockets)
+      connectedIds.push({
+        id: socket.customId,
+        socketId: socket.id
+      })
+      console.log('connected sockets', connectedIds)
 
       socket.on('joinLobby', data => {
         joinLobby(socket, data)
@@ -145,6 +156,7 @@ export default defineEventHandler(({ node }) => {
       socket.on('disconnecting', reason => {
         console.log(`${socket.customId} disconnecting`)
         connectedSockets = connectedSockets.filter(s => s !== socket.customId)
+        connectedIds = connectedIds.filter(s => s.id !== socket.customId)
         for (const room of socket.rooms) {
           if (room !== socket.id) {
             socket.to(room).emit('userLeft', socket.id)
@@ -190,7 +202,10 @@ export default defineEventHandler(({ node }) => {
       })
     }
 
-    const checkAnswer = (socket, data) => {
+    const checkAnswer = async (socket, data) => {
+      const getData = await $fetch(`/api/Game/gameData/${data.gameId}`, {
+        method: 'GET'
+      })
       socket.to(data.gameId).emit('guess', {
         guess: data.answer,
         player: data.id
@@ -234,15 +249,34 @@ export default defineEventHandler(({ node }) => {
         // get the number of clients
         const numClients = [...(clients ? clients : 0)]
         // if there are two clients, start a game
-        if (numClients.length === 2) {
+        if (numClients.length >= 2) {
+          const data = await $fetch('/api/Game/getData')
+          const postedData = await $fetch(`/api/Game/gameData/${room}`, {
+            method: 'POST',
+            body: {
+              gameId: room,
+              socketIds: [numClients[0], numClients[1]],
+              playerIds: [getPlayerIdFromSocketId(numClients[0]), getPlayerIdFromSocketId(numClients[1])],
+              gameData: {
+                columnClubs: data.initialClubs,
+                rowClubs: data.secondaryClubs,
+                matches: data.matches
+              }
+            }
+          })
           currentRooms.push({
             id: room,
-            players: numClients,
+            playerIds: [getPlayerIdFromSocketId(numClients[0]), getPlayerIdFromSocketId(numClients[1])],
+            socketIds: [numClients[0], numClients[1]],
             playersReady: [false, false],
-            timer: null
+            timer: null,
+            gameData: {
+              columnClubs: data.initialClubs,
+              rowClubs: data.secondaryClubs,
+              matches: data.matches
+            }
           })
-          const data = await $fetch('/api/Clubs/getClubs')
-          io?.to(room).emit('bothPlayersJoined', {
+          io.to(room).emit('bothPlayersJoined', {
             gameId: room,
             isJoined: true,
             gameData: {

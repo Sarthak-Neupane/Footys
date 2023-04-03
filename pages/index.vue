@@ -39,6 +39,8 @@ import { useGridStore } from '~~/store/gridStore';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'vue-router';
 
+
+
 // state management and router
 const store = useGameStore();
 const gridStore = useGridStore();
@@ -46,7 +48,6 @@ const $router = useRouter();
 
 // registering plugins
 const { $socket } = useNuxtApp()
-
 
 // refs for matchmaking
 const matchmakingText = ref('FINDING A GAME')

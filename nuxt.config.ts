@@ -16,6 +16,13 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     mongodbURI: process.env.MONGODB_URI,
+    FIREBASE_API_KEY: process.env.FIREBASE_CONFIG_APIKEY,
+    FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_CONFIG_AUTHDOMAIN,
+    FIREBASE_PROJECT_ID: process.env.FIREBASE_CONFIG_PROJECTID,
+    FIREBASE_STORAGE_BUCKET: process.env.FIREBASE_CONFIG_STORAGEBUCKET,
+    FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_CONFIG_MESSAGINGSENDERID,
+    FIREBASE_APP_ID: process.env.FIREBASE_CONFIG_APPID,
+    FIREBASE_MEASUREMENT_ID: process.env.FIREBASE_CONFIG_MEASUREMENTID,
 
     public: {
       socketURL: process.env.SOCKET_URL || "http://localhost:8000",
