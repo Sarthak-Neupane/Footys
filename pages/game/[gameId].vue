@@ -60,8 +60,9 @@
         class="container md:py-5 sm:w-3/4 md:w-4/5 lg:w-4/6 my-0 mx-auto h-full flex flex-col justify-start items-center">
         <div class="w-full px-6 flex flex-col md:flex-row justify-center items-center gap-7 md:gap-12">
           <div class="w-full flex flex-col justify-center items-center gap-8 md:gap-12">
-            <Grid :currentAnswer="currentAnswer" :gameEnd="gameEnd" :resetGrid="resetGrid"
-              @player-guess="sendGuessToStore" @game-ended="gameEnded"></Grid>
+            <!-- <Grid :currentAnswer="currentAnswer" :gameEnd="gameEnd" :resetGrid="resetGrid"
+              @player-guess="sendGuessToStore" @game-ended="gameEnded"></Grid> -->
+              <tryGrid></tryGrid>
             <transition name="fade" mode="out-in" appear>
               <div class="relative w-full md:w-full flex justify-center items-center" v-if="!gameEnd">
                 <SearchBar @submit-answer="sendGuessToEmit" v-if="playerTurn" />
@@ -309,10 +310,10 @@ const dontLeaveGame = () => {
 const sendGuessToEmit = async (e) => {
 
   // setting the current answer to the current guess, so that the grid component gets the new answer
-  currentAnswer.value = {
-    ...e,
-    'playerId': player.value
-  }
+  // currentAnswer.value = {
+  //   ...e,
+  //   'playerId': player.value
+  // }
 
   // emitting a guess event to server and sending the current guess, along with the player id
   $socket.emit('checkAnswer', {
@@ -387,12 +388,14 @@ const socketEvents = () => {
   })
 
   // send the current answer to the grid component is the server emits a 'guess' event
-  $socket.on('guess', (data) => {
+  $socket.on('checkedAnswer', (data) => {
     // store.resetTimer()
-    currentAnswer.value = {
-      ...data.guess,
-      'playerId': data.player,
-    }
+    // currentAnswer.value = {
+    //   ...data.guess,
+    //   'playerId': data.player,
+    // }
+
+    console.log(data)
   })
 
   // change the current turn if the server emits a 'changeTurn' event
@@ -453,7 +456,6 @@ const socketEvents = () => {
 
   $socket.on('bothPlayersJoined', (data) => {
     if (data.isJoined) {
-
       const Newinterval = setInterval(() => {
         if (joiningGameIn.value > 0) {
           matchmakingText.value = `Joining game in ${joiningGameIn.value}...`

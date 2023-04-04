@@ -213,10 +213,9 @@ export default defineEventHandler(({ node }) => {
           action: 'checkAnswer',
         }
       })
-      console.log('checkedData', checkedData)
-      socket.to(data.gameId).emit('guess', {
-        guess: data.answer,
-        player: data.id
+      io.to(data.gameId).emit('checkedAnswer', {
+        meta: checkedData.meta,
+        result: checkedData.result,
       })
     }
 

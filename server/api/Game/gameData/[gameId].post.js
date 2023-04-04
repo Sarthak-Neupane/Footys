@@ -37,10 +37,10 @@ const checkAnswer = async data => {
     for (let e of elem) {
       if (e.id === data.answer.id) {
         occupiedIndexes.push(ind)
-        result = { correct: true, index: ind, answer: e, occupiedIndexes: occupiedIndexes, player: data.player, socket: data.socket }
+        result = { correct: true, index: ind, occupiedIndexes: occupiedIndexes }
         break outerloop
       } else {
-        result = { correct: false, occupiedIndexes: occupiedIndexes, player: data.player, socket: data.socket }
+        result = { correct: false, index: null, occupiedIndexes: occupiedIndexes }
       }
     }
   }
@@ -67,5 +67,10 @@ export default defineEventHandler(async event => {
 
   return {
     result: result,
+    meta: {
+      answer: body.meta.answer,
+      player: body.meta.player,
+      socketId: body.meta.socketId,
+    }
   }
 })
