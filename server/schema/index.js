@@ -18,5 +18,14 @@ const playerSchema = new mongoose.Schema({
   clubsPlayedFor: [{type: mongoose.SchemaTypes.ObjectId, ref: 'Clubs'}], // Object Id of Clubs
 });
 
+const gameSchema = new mongoose.Schema({
+  id: String,
+  playerIds: Array,
+  socketIds: Array,
+  gameData: Object,
+  gameStatus: String,
+})
+
 export const clubModel = mongoose.model("Clubs", clubSchema)
 export const playerModel = mongoose.model("Players", playerSchema)
+export const gameModel = mongoose.model("Games", gameSchema)

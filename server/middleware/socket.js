@@ -7,8 +7,6 @@ let currentRooms = []
 let connectedSockets = []
 let connectedIds = []
 
-
-
 const randomNumber = (min, max, exclude) => {
   const number = Math.floor(Math.random() * (max - min + 1)) + min
   if (!exclude.includes(number)) {
@@ -203,9 +201,19 @@ export default defineEventHandler(({ node }) => {
     }
 
     const checkAnswer = async (socket, data) => {
-      const getData = await $fetch(`/api/Game/gameData/${data.gameId}`, {
-        method: 'GET'
+      const checkedData = await $fetch(`/api/Game/gameData/${data.gameId}`, {
+        method: 'POST',
+        body: {
+          meta: {
+            answer: data.answer,
+            player: socket.customId,
+            gameId: data.gameId,
+            socket: socket.id,
+          },
+          action: 'checkAnswer',
+        }
       })
+      console.log('checkedData', checkedData)
       socket.to(data.gameId).emit('guess', {
         guess: data.answer,
         player: data.id
@@ -251,7 +259,7 @@ export default defineEventHandler(({ node }) => {
         // if there are two clients, start a game
         if (numClients.length >= 2) {
           const data = await $fetch('/api/Game/getData')
-          const postedData = await $fetch(`/api/Game/gameData/${room}`, {
+          const postedData = await $fetch(`/api/Game/gameData/data`, {
             method: 'POST',
             body: {
               gameId: room,

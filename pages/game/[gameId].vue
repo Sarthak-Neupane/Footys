@@ -308,11 +308,6 @@ const dontLeaveGame = () => {
 // send the guess to server and grid. After the 'submit-answer' event is emitted by the searchBar component
 const sendGuessToEmit = async (e) => {
 
-  const data = await $fetch(`/api/Game/gameData/${store.gameId}`, {
-    method: 'GET',
-  })
-  console.log(data)
-
   // setting the current answer to the current guess, so that the grid component gets the new answer
   currentAnswer.value = {
     ...e,
