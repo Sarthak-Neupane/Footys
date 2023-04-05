@@ -1,45 +1,55 @@
 import { defineStore } from 'pinia'
 
 export const useGridStore = defineStore('grid', () => {
-    const columnClubs = ref([])
-    const rowClubs = ref([])
-    const matches = ref([])
-    const gridAnswers = ref([])
+  const columnClubs = ref([])
+  const rowClubs = ref([])
+  const allAnswers = ref([])
+  const currentAnswer = ref()
+  const playerIndexes = ref([])
+  const opponentIndexes = ref([])
 
-    const setColumnClubs = (clubs) => {
-        columnClubs.value = clubs
-    }
+  const setColumnClubs = clubs => {
+    columnClubs.value = clubs
+  }
 
-    const setRowClubs = (clubs) => {
-        rowClubs.value = clubs
-    }
+  const setRowClubs = clubs => {
+    rowClubs.value = clubs
+  }
 
-    const setMatches = (match) => {
-        matches.value = match
-    }
+  const setCurrentAnswer = answer => {
+    currentAnswer.value = answer
+    allAnswers.value.push(answer)
 
-    const setGridAnswers = () => {
-        gridAnswers.value = [
-            matches.value[0][0],
-            matches.value[0][1],
-            matches.value[0][2],
-            matches.value[1][0],
-            matches.value[1][1],
-            matches.value[1][2],
-            matches.value[2][0],
-            matches.value[2][1],
-            matches.value[2][2]
-        ]
+    if (answer.result.index !== null) {
+      if (answer.meta.player === localStorage.getItem('id')) {
+        setPlayerIndex(answer.result.index)
+      } else {
+        setOpponentIndex(answer.result.index)
+      }
     }
+  }
 
-    return {
-        columnClubs,
-        rowClubs,
-        matches,
-        gridAnswers,
-        setColumnClubs,
-        setRowClubs,
-        setMatches,
-        setGridAnswers
-    }
+  const setPlayerIndex = index => {
+    // console.log('index', index)
+    playerIndexes.value.push(index)
+  }
+
+  const setOpponentIndex = index => {
+    // console.log('index', index)
+    opponentIndexes.value.push(index)
+  }
+
+  return {
+    columnClubs,
+    rowClubs,
+    setColumnClubs,
+    setRowClubs,
+    currentAnswer,
+    setCurrentAnswer,
+    allAnswers,
+    playerIndexes,
+    setPlayerIndex,
+    opponentIndexes,
+    setOpponentIndex
+  }
 })

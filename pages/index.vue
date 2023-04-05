@@ -126,9 +126,7 @@ const socketEvents = () => {
 
           // set the gameData to store
           gridStore.setColumnClubs(data.gameData.columnClubs)
-          gridStore.setRowClubs(data.gameData.rowClubs)
-          gridStore.setMatches(data.gameData.matches)
-          gridStore.setGridAnswers()
+          gridStore.setRowClubs(data.gameData.rowClubs) 
 
           $router.push(`/game/${store.gameId}`)
         }

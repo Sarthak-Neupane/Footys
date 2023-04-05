@@ -62,7 +62,7 @@
           <div class="w-full flex flex-col justify-center items-center gap-8 md:gap-12">
             <!-- <Grid :currentAnswer="currentAnswer" :gameEnd="gameEnd" :resetGrid="resetGrid"
               @player-guess="sendGuessToStore" @game-ended="gameEnded"></Grid> -->
-              <tryGrid></tryGrid>
+            <tryGrid ref="grid"></tryGrid>
             <transition name="fade" mode="out-in" appear>
               <div class="relative w-full md:w-full flex justify-center items-center" v-if="!gameEnd">
                 <SearchBar @submit-answer="sendGuessToEmit" v-if="playerTurn" />
@@ -155,6 +155,10 @@ definePageMeta({
 
 // REGISTERING REFS
 
+// the grid ref
+const grid = ref()
+
+
 // refs for player leaving a game prematurely
 const opponentLeft = ref(false)
 const playerWantingToLeave = ref(false)
@@ -243,15 +247,6 @@ onBeforeRouteLeave((to, from, next) => {
 
 // WATCHERS START ------------------------------------------------
 
-// watcher to check if the current turn is over 
-// watch(getTimer, (current, previous) => {
-//   if (current === 0 && playerTurn.value) {
-//     sendGuessToEmit({
-//       isEmpty: true,
-//     })
-//   }
-// })
-
 watch(playerDecidedToLeave, (current, previous) => {
   if (current === true) {
     if (!store.gameEnd && !opponentLeft.value && store.gameId != null) {
@@ -261,12 +256,9 @@ watch(playerDecidedToLeave, (current, previous) => {
       $router.push('/')
     }
   } else {
-    
+
   }
 })
-
-
-
 
 // WATCHERS END --------------------------------------------------
 
@@ -306,15 +298,12 @@ const dontLeaveGame = () => {
   playerDecidedToLeave.value = false
 }
 
+const getGridIndexFromAnswerIndex = (e) => {
+
+}
+
 // send the guess to server and grid. After the 'submit-answer' event is emitted by the searchBar component
 const sendGuessToEmit = async (e) => {
-
-  // setting the current answer to the current guess, so that the grid component gets the new answer
-  // currentAnswer.value = {
-  //   ...e,
-  //   'playerId': player.value
-  // }
-
   // emitting a guess event to server and sending the current guess, along with the player id
   $socket.emit('checkAnswer', {
     answer: {
@@ -334,7 +323,7 @@ const sendGuessToStore = (e) => {
   }
 
   // change the player turn in the localstate 
-  if(store.playerTurn){
+  if (store.playerTurn) {
     $socket.emit('changeTurn', { id: player.value, gameId: store.gameId })
   }
 }
@@ -389,13 +378,7 @@ const socketEvents = () => {
 
   // send the current answer to the grid component is the server emits a 'guess' event
   $socket.on('checkedAnswer', (data) => {
-    // store.resetTimer()
-    // currentAnswer.value = {
-    //   ...data.guess,
-    //   'playerId': data.player,
-    // }
-
-    console.log(data)
+    gridStore.setCurrentAnswer(data)
   })
 
   // change the current turn if the server emits a 'changeTurn' event

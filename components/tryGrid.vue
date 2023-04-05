@@ -51,13 +51,95 @@
 
 
 <script setup>
+import gsap from 'gsap'
+
+import { useGameStore } from '~~/store/gameStore';
 import { useGridStore } from '~~/store/gridStore';
 import { storeToRefs } from 'pinia';
 
-const gridStore = useGridStore()
+const grid = ref()
 
+const gameStore = useGameStore()
+const gridStore = useGridStore()
 const { columnClubs, rowClubs } = storeToRefs(gridStore)
 
+
+const occupiedPlayerAnswerIndexes = ref([])
+const occupiedPlayerGridNumbers = ref([])
+
+const occupiedOpponentAnswerIndexes = ref([])
+const occupiedOpponentGridNumbers = ref([])
+
+gridStore.$subscribe((mutation, state) => {
+    if (state.playerIndexes.length > 0) {
+        const recentIndex = state.playerIndexes[state.playerIndexes.length - 1]
+        console.log(recentIndex, 'player')
+        console.log(occupiedPlayerAnswerIndexes.value)
+        if (!occupiedPlayerAnswerIndexes.value.includes(recentIndex)) {
+            occupiedPlayerAnswerIndexes.value.push(recentIndex)
+            occupiedPlayerGridNumbers.value.push(getTheGridNumberFromAnswerIndex(recentIndex))
+        }
+    }
+
+    if (state.opponentIndexes.length > 0) {
+        const recentIndex = state.opponentIndexes[state.opponentIndexes.length - 1]
+        console.log(recentIndex, 'opponent')
+        console.log(occupiedOpponentAnswerIndexes.value)
+        if (!occupiedOpponentAnswerIndexes.value.includes(recentIndex)) {
+            occupiedOpponentAnswerIndexes.value.push(recentIndex)
+            occupiedOpponentGridNumbers.value.push(getTheGridNumberFromAnswerIndex(recentIndex))
+        }
+    }
+})
+
+const getTheGridNumberFromAnswerIndex = (answerIndex) => {
+    const answerIndexElement = grid.value.querySelector(`[data-index="${answerIndex}"]`)
+    const gridNumber = answerIndexElement.getAttribute('data-number')
+    return Number(gridNumber)
+}
+
+watch(() => occupiedPlayerGridNumbers.value, (newVal, oldVal) => {
+    console.log('player', newVal, oldVal)
+    newVal.forEach((number) => {
+        console.log('player', number)
+        const element = grid.value.querySelector(`[data-number="${number}"]`)
+        console.log(element)
+        gsapAnimation(element, true)
+    })
+}, {
+    deep: true,
+})
+
+watch(() => occupiedOpponentGridNumbers.value, (newVal, oldVal) => {
+    console.log('opponent', newVal, oldVal)
+    newVal.forEach((number) => {
+        console.log('opponent', number)
+        const element = grid.value.querySelector(`[data-number="${number}"]`)
+        console.log(element)
+        gsapAnimation(element, false)
+    })
+}, {
+    deep: true,
+})
+
+const gsapAnimation = (element, playerTurn) => {
+    const color = playerTurn ? gameStore.getPlayerColor : gameStore.getOpponentColor
+    gsap.to(element.firstElementChild, {
+        duration: 0.5,
+        top: '-5px',
+        left: '-5px',
+        backgroundColor: color === 'blue' ? '#6B59D6' : '#82AF81',
+        ease: 'power2.inOut',
+    })
+}
+
+// gsap.to(grids[ind].value.firstElementChild, {
+// duration: 0.5,
+// top: '-5px',
+// left: '-5px',
+// backgroundColor: store.getPlayerColor === 'blue' ? '#6B59D6' : '#82AF81',
+// ease: 'power2.inOut',
+// })
 
 </script>
 
@@ -72,7 +154,6 @@ const { columnClubs, rowClubs } = storeToRefs(gridStore)
 }
 
 .outerCell {
-    @apply text-[11px]  sm:text-xs md:text-sm lg:text-base text-center
+    @apply text-[11px] sm:text-xs md:text-sm lg:text-base text-center
 }
-
 </style>
