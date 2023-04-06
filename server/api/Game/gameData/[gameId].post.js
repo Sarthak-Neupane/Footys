@@ -6,7 +6,7 @@ let rowClubs = []
 let matches = []
 let gridAnswers = []
 let occupiedIndexes = []
-let result;
+let result
 
 const getData = async getId => {
   console.log('getting data')
@@ -35,19 +35,22 @@ const checkAnswer = async data => {
   outerloop: for (let [ind, elem] of gridAnswers.entries()) {
     if (occupiedIndexes.includes(ind)) continue
     for (let e of elem) {
-      if (e.id === data.answer.id) {
+      if (e.id === data.answer?.id) {
         occupiedIndexes.push(ind)
         result = { correct: true, index: ind, occupiedIndexes: occupiedIndexes }
         break outerloop
       } else {
-        result = { correct: false, index: null, occupiedIndexes: occupiedIndexes }
+        result = {
+          correct: false,
+          index: null,
+          occupiedIndexes: occupiedIndexes
+        }
       }
     }
   }
 }
 
 export default defineEventHandler(async event => {
-
   const body = await readBody(event)
 
   // const getId = event.context.params.id
@@ -59,9 +62,15 @@ export default defineEventHandler(async event => {
     if (body.action === 'checkAnswer') {
       checkAnswer(body.meta)
     }
+    if(body.action === 'emptyCheck'){
+      result = { correct: false, index: null, occupiedIndexes: occupiedIndexes }
+    }
   } else {
     if (body.action === 'checkAnswer') {
       checkAnswer(body.meta)
+    }
+    if(body.action === 'emptyCheck'){
+      result = { correct: false, index: null, occupiedIndexes: occupiedIndexes }
     }
   }
 
@@ -70,7 +79,7 @@ export default defineEventHandler(async event => {
     meta: {
       answer: body.meta.answer,
       player: body.meta.player,
-      socketId: body.meta.socketId,
+      socketId: body.meta.socket
     }
   }
 })

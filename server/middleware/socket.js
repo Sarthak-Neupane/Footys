@@ -2,10 +2,30 @@ import { Server } from 'socket.io'
 import { instrument } from '@socket.io/admin-ui'
 import { v4 as uuidv4 } from 'uuid'
 
+
 let io
 let currentRooms = []
 let connectedSockets = []
 let connectedIds = []
+
+const checkAnswer = async (socket, data, isEmpty) => {
+  const checkedData = await $fetch(`/api/Game/gameData/${data.gameId}`, {
+    method: 'POST',
+    body: {
+      meta: {
+        answer: data.answer,
+        player: isEmpty ? data.player : socket.customId,
+        gameId: data.gameId,
+        socket: isEmpty ? data.socketId : socket.id
+      },
+      action: isEmpty ? 'emptyCheck' : 'checkAnswer'
+    }
+  })
+  io.to(data.gameId).emit('checkedAnswer', {
+    meta: checkedData.meta,
+    result: checkedData.result
+  })
+}
 
 const randomNumber = (min, max, exclude) => {
   const number = Math.floor(Math.random() * (max - min + 1)) + min
@@ -25,6 +45,11 @@ const getPlayerIdFromSocketId = socketId => {
   return player.id
 }
 
+const getSocketIdFromPlayerId = playerId => {
+  const player = connectedIds.find(player => player.id === playerId)
+  return player.socketId
+}
+
 const registerTimer = (socket, data) => {
   const timer = setInterval(() => {
     io.to(data.gameId).emit('timer', {
@@ -33,6 +58,18 @@ const registerTimer = (socket, data) => {
     data.time--
     if (data.time < 0) {
       clearTimer(timer)
+      if(io && currentRooms.length > 0){
+        const exactRoom = getExactRoom(data.gameId)
+        console.log('exact room', exactRoom.currentTurn)
+        checkAnswer(null, {
+          gameId: data.gameId,
+          player: exactRoom.currentTurn,
+          socketId: getSocketIdFromPlayerId(exactRoom.currentTurn),
+          answer: {
+            isEmpty: true
+          }
+        }, true)
+      }
     }
   }, 1000)
   return timer
@@ -136,7 +173,7 @@ export default defineEventHandler(({ node }) => {
       socket.on('checkAnswer', data => {
         const exactRoom = getExactRoom(data.gameId)
         clearTimer(exactRoom.timer)
-        checkAnswer(socket, data)
+        checkAnswer(socket, data, false)
       })
       socket.on('changeTurns', data => {
         changeTurns(socket, data)
@@ -205,24 +242,24 @@ export default defineEventHandler(({ node }) => {
       }
     }
 
-    const checkAnswer = async (socket, data) => {
-      const checkedData = await $fetch(`/api/Game/gameData/${data.gameId}`, {
-        method: 'POST',
-        body: {
-          meta: {
-            answer: data.answer,
-            player: socket.customId,
-            gameId: data.gameId,
-            socket: socket.id
-          },
-          action: 'checkAnswer'
-        }
-      })
-      io.to(data.gameId).emit('checkedAnswer', {
-        meta: checkedData.meta,
-        result: checkedData.result
-      })
-    }
+    // const checkAnswer = async (socket, data, isEmpty) => {
+    //   const checkedData = await $fetch(`/api/Game/gameData/${data.gameId}`, {
+    //     method: 'POST',
+    //     body: {
+    //       meta: {
+    //         answer: data.answer,
+    //         player: isEmpty ? data.player : socket.customId,
+    //         gameId: data.gameId,
+    //         socket: isEmpty ? data.socketId : socket.id
+    //       },
+    //       action: isEmpty ? 'emptyCheck' : 'checkAnswer'
+    //     }
+    //   })
+    //   io.to(data.gameId).emit('checkedAnswer', {
+    //     meta: checkedData.meta,
+    //     result: checkedData.result
+    //   })
+    // }
 
     const gameDecided = (socket, data) => {
       if (data.winner) {
@@ -246,6 +283,11 @@ export default defineEventHandler(({ node }) => {
       )
       if (exactRoom.willChangeTurns) {
         io.to(data.gameId).emit('changeTurns', [], () => {
+          if(exactRoom.currentTurn === exactRoom.playerIds[0]){
+            exactRoom.currentTurn = exactRoom.playerIds[1]
+          } else {
+            exactRoom.currentTurn = exactRoom.playerIds[0]
+          }
           exactRoom.willChangeTurns = 0
           exactRoom.timer = registerTimer(socket, {
             gameId: data.gameId,
@@ -306,6 +348,7 @@ export default defineEventHandler(({ node }) => {
             player1Color: player1 === 0 ? 'green' : 'blue',
             player2: numClients[player2],
             player2Color: player2 === 0 ? 'green' : 'blue',
+            currentTurn: getPlayerIdFromSocketId(numClients[player1]),
             gameData: {
               columnClubs: data.initialClubs,
               rowClubs: data.secondaryClubs,
