@@ -15,11 +15,11 @@
 </template>
 
 <script setup>
-import { useGameStore } from '~~/store/gameStore';
 import { useGridStore } from '~~/store/gridStore';
+import { useMainStore } from '~~/store/mainStore';
 import { storeToRefs } from 'pinia'
 
-const store = useGameStore();
+const mainStore = useMainStore();
 const gridStore = useGridStore();
 
 const localPlayerGuessList = ref([])
@@ -33,12 +33,12 @@ gridStore.$subscribe((mut, state)=>{
   }
 })
 
-const { getPlayerColor } = storeToRefs(store)
-const { getOpponentColor } = storeToRefs(store)
+const { getMyColor } = storeToRefs(mainStore)
+const { getOpponentColor } = storeToRefs(mainStore)
 
 const returnPlayerClass = (guess) => {
   if (guess.correct === true) {
-    if (getPlayerColor.value === 'green') { return 'text-green' } else { return `text-blue` }
+    if (getMyColor.value === 'green') { return 'text-green' } else { return `text-blue` }
   } else {
     return 'text-lightBlack'
   }

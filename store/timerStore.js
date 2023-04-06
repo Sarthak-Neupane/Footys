@@ -7,9 +7,9 @@ export const useTimerStore = defineStore('timer', () => {
     timer.value = e
   }
 
-  const getTimer = () => {
+  const getTimer = computed(() => {
     return timer.value
-    }
+  })
 
   return {
     setTimer,

@@ -54,6 +54,7 @@
 import gsap from 'gsap'
 
 import { useGameStore } from '~~/store/gameStore';
+import { useMainStore } from '~~/store/mainStore';
 import { useGridStore } from '~~/store/gridStore';
 import { storeToRefs } from 'pinia';
 
@@ -61,6 +62,7 @@ const grid = ref()
 
 const gameStore = useGameStore()
 const gridStore = useGridStore()
+const mainStore = useMainStore()
 const { columnClubs, rowClubs } = storeToRefs(gridStore)
 
 const occupiedPlayerAnswerIndexes = ref([])
@@ -119,7 +121,7 @@ watch(() => occupiedOpponentGridNumbers.value, (newVal, oldVal) => {
 })
 
 const gsapAnimation = (element, playerTurn) => {
-    const color = playerTurn ? gameStore.getPlayerColor : gameStore.getOpponentColor
+    const color = playerTurn ? mainStore.getMyColor : mainStore.getOpponentColor
     gsap.to(element.firstElementChild, {
         duration: 0.5,
         top: '-5px',

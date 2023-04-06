@@ -36,6 +36,8 @@
 <script setup>
 import { useGameStore } from '~~/store/gameStore';
 import { useGridStore } from '~~/store/gridStore';
+import { useMainStore } from '~~/store/mainStore';
+import { useTimerStore } from '~~/store/timerStore';
 import { v4 as uuidv4 } from 'uuid';
 import { useRouter } from 'vue-router';
 
@@ -44,6 +46,8 @@ import { useRouter } from 'vue-router';
 // state management and router
 const store = useGameStore();
 const gridStore = useGridStore();
+const mainStore = useMainStore();
+const timerStore = useTimerStore();
 const $router = useRouter();
 
 // registering plugins
