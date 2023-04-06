@@ -298,43 +298,13 @@ const dontLeaveGame = () => {
   playerDecidedToLeave.value = false
 }
 
-const getGridIndexFromAnswerIndex = (e) => {
-
-}
-
 // send the guess to server and grid. After the 'submit-answer' event is emitted by the searchBar component
 const sendGuessToEmit = async (e) => {
-  // emitting a guess event to server and sending the current guess, along with the player id
   $socket.emit('checkAnswer', {
     answer: {
       ...e,
     }, id: player.value, gameId: store.gameId
   })
-}
-
-// sending the current guess to store after the grid completes checking the answer and emits a 'player-guess' events
-const sendGuessToStore = (e) => {
-  if (e.playerId === player.value) {
-    // add to player guess
-    store.addPlayerGuess(e)
-  } else {
-    // add to opponent guess
-    store.addOpponentGuess(e)
-  }
-
-  // change the player turn in the localstate 
-  if (store.playerTurn) {
-    $socket.emit('changeTurn', { id: player.value, gameId: store.gameId })
-  }
-}
-
-// emit event 'gameDecided' to the server after 'grid' component emits the 'game-ended' event
-const gameEnded = (e) => {
-  if (e.isDraw === true) {
-    $socket.emit('gameDecided', { winner: null, gameId: store.gameId })
-  } else {
-    $socket.emit('gameDecided', { winner: e.winner, gameId: store.gameId })
-  }
 }
 
 // PLAY AGAIN METHODS --------------------

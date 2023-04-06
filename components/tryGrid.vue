@@ -63,12 +63,13 @@ const gameStore = useGameStore()
 const gridStore = useGridStore()
 const { columnClubs, rowClubs } = storeToRefs(gridStore)
 
-
 const occupiedPlayerAnswerIndexes = ref([])
 const occupiedPlayerGridNumbers = ref([])
 
 const occupiedOpponentAnswerIndexes = ref([])
 const occupiedOpponentGridNumbers = ref([])
+
+const emits = defineEmits(['animationComplete'])
 
 gridStore.$subscribe((mutation, state) => {
     if (state.playerIndexes.length > 0) {
@@ -132,14 +133,6 @@ const gsapAnimation = (element, playerTurn) => {
         ease: 'power2.inOut',
     })
 }
-
-// gsap.to(grids[ind].value.firstElementChild, {
-// duration: 0.5,
-// top: '-5px',
-// left: '-5px',
-// backgroundColor: store.getPlayerColor === 'blue' ? '#6B59D6' : '#82AF81',
-// ease: 'power2.inOut',
-// })
 
 </script>
 

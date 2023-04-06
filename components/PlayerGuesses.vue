@@ -2,30 +2,47 @@
   <div class="w-1/2 border-solid border-r-[0px] border-lightBlack">
     <TransitionGroup name="list" tag="ul" class="w-full flex flex-col justify-start items-start"
       @before-enter="onBeforeEnter">
-      <li v-for="guess in getPlayerGuesses" :key="guess.isEmpty ? 'NoKeyP' : guess._id" class="guess" :class="returnPlayerClass(guess)"> {{ !guess.isEmpty ? guess.name : 'N/A'  }} </li>
+      <li v-for="guess in localPlayerGuessList" :key="guess.meta.answer.isEmpty ? 'NoKeyP' : guess.meta.answer._id" class="guess" :class="returnPlayerClass(guess.result)"> {{ !guess.meta.answer.isEmpty ? guess.meta.answer.name : 'N/A'  }} </li>
     </TransitionGroup>
   </div>
 
   <div class=" w-1/2">
     <TransitionGroup name="list" tag="ul" class="w-full flex flex-col justify-start items-start text-right"
       @before-enter="onBeforeEnter">
-      <li v-for="guess in getOpponentGuesses" :key="guess.isEmpty ? 'NoKeyO' : guess._id" class="guess" :class="returnOpponentClass(guess)"> {{ !guess.isEmpty ? guess.name : 'N/A'  }} </li>
+      <li v-for="guess in localOpponentGuessList" :key="guess.meta.answer.isEmpty ? 'NoKeyO' : guess.meta.answer._id" class="guess" :class="returnOpponentClass(guess.result)"> {{ !guess.meta.answer.isEmpty ? guess.meta.answer.name : 'N/A' }} </li>
     </TransitionGroup>
   </div>
 </template>
 
 <script setup>
 import { useGameStore } from '~~/store/gameStore';
+import { useGridStore } from '~~/store/gridStore';
 import { storeToRefs } from 'pinia'
 
 const store = useGameStore();
-const { getPlayerGuesses } = storeToRefs(store)
-const { getOpponentGuesses } = storeToRefs(store)
+const gridStore = useGridStore();
+
+const localPlayerGuessList = ref([])
+const localOpponentGuessList = ref([])
+
+gridStore.$subscribe((mut, state)=>{
+  console.log(state.currentAnswer)
+  if(state.currentAnswer.meta.player === localStorage.getItem('id')){
+    localPlayerGuessList.value.push(state.currentAnswer) 
+    console.log('player', localPlayerGuessList.value)
+  } else {
+    localOpponentGuessList.value.push(state.currentAnswer)
+    console.log('opponent', localOpponentGuessList.value)
+  }
+})
+
+// const { getPlayerGuesses } = storeToRefs(store)
+// const { getOpponentGuesses } = storeToRefs(store)
 const { getPlayerColor } = storeToRefs(store)
 const { getOpponentColor } = storeToRefs(store)
 
 const returnPlayerClass = (guess) => {
-  if (guess.isCorrect === true) {
+  if (guess.correct === true) {
     if (getPlayerColor.value === 'green') { return 'text-green' } else { return `text-blue` }
   } else {
     return 'text-lightBlack'
@@ -33,7 +50,7 @@ const returnPlayerClass = (guess) => {
 }
 
 const returnOpponentClass = (guess) => {
-  if (guess.isCorrect === true) {
+  if (guess.correct === true) {
     if (getOpponentColor.value === 'green') { return 'text-green' } else { return `text-blue` }
   } else {
     return 'text-lightBlack'
