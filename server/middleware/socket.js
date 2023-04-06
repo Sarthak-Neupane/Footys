@@ -116,17 +116,17 @@ export default defineEventHandler(({ node }) => {
       socket.on('joinGame', data => {
         joinGame(socket, data)
       })
-      socket.on('gameStart', data => {
-        gameStart(socket, data)
-      })
       socket.on('ready', data => {
+        startGame(socket, data)
+      })
+      socket.on('start', data => {
         const exactRoom = getExactRoom(data.gameId)
         if (data.playerTurn) {
-          exactRoom.playersReady[0] = true
+          exactRoom.playersStarted[0] = true
         } else {
-          exactRoom.playersReady[1] = true
+          exactRoom.playersStarted[1] = true
         }
-        if (exactRoom.playersReady[0] && exactRoom.playersReady[1]) {
+        if (exactRoom.playersStarted[0] && exactRoom.playersStarted[1]) {
           exactRoom.timer = registerTimer(socket, {
             gameId: data.gameId,
             time: 30
@@ -138,7 +138,7 @@ export default defineEventHandler(({ node }) => {
         clearTimer(exactRoom.timer)
         checkAnswer(socket, data)
       })
-      socket.on('changeTurns', (data) => {
+      socket.on('changeTurns', data => {
         changeTurns(socket, data)
       })
       socket.on('gameDecided', data => {
@@ -188,16 +188,21 @@ export default defineEventHandler(({ node }) => {
       })
     }
 
-    const gameStart = (socket, data) => {
-      const clients = io?.of('/').adapter.rooms.get(data.gameId)
-      const numClients = [...(clients ? clients : 0)]
-      const number = randomNumber(0, 1, [])
-      io?.to(data.gameId).emit('startGame', {
-        player1: numClients[number],
-        player2: numClients[number === 0 ? 1 : 0],
-        color1: number === 0 ? 'green' : 'blue',
-        color2: number === 0 ? 'blue' : 'green'
-      })
+    const startGame = (socket, data) => {
+      const exactRoom = getExactRoom(data.gameId)
+      if(exactRoom.playersReady[0]){
+        exactRoom.playersReady[1] = true
+      } else {
+        exactRoom.playersReady[0] = true
+      }
+      if (exactRoom.playersReady[0] && exactRoom.playersReady[1]) {
+        io?.to(data.gameId).emit('startGame', {
+          player1: exactRoom.player1,
+          player2: exactRoom.player2,
+          color1: exactRoom.player1Color,
+          color2: exactRoom.player2Color
+        })
+      }
     }
 
     const checkAnswer = async (socket, data) => {
@@ -208,14 +213,14 @@ export default defineEventHandler(({ node }) => {
             answer: data.answer,
             player: socket.customId,
             gameId: data.gameId,
-            socket: socket.id,
+            socket: socket.id
           },
-          action: 'checkAnswer',
+          action: 'checkAnswer'
         }
       })
       io.to(data.gameId).emit('checkedAnswer', {
         meta: checkedData.meta,
-        result: checkedData.result,
+        result: checkedData.result
       })
     }
 
@@ -233,9 +238,14 @@ export default defineEventHandler(({ node }) => {
 
     const changeTurns = (socket, data) => {
       const exactRoom = getExactRoom(data.gameId)
-      console.log('change turns', socket.customId, 'will change turns', exactRoom.willChangeTurns)
-      if(exactRoom.willChangeTurns){
-        io.to(data.gameId).emit('changeTurns', [], ()=>{
+      console.log(
+        'change turns',
+        socket.customId,
+        'will change turns',
+        exactRoom.willChangeTurns
+      )
+      if (exactRoom.willChangeTurns) {
+        io.to(data.gameId).emit('changeTurns', [], () => {
           exactRoom.willChangeTurns = 0
           exactRoom.timer = registerTimer(socket, {
             gameId: data.gameId,
@@ -262,13 +272,18 @@ export default defineEventHandler(({ node }) => {
         const numClients = [...(clients ? clients : 0)]
         // if there are two clients, start a game
         if (numClients.length >= 2) {
+          const player1 = randomNumber(0, 1, [])
+          const player2 = player1 === 0 ? 1 : 0
           const data = await $fetch('/api/Game/getData')
           const postedData = await $fetch(`/api/Game/gameData/data`, {
             method: 'POST',
             body: {
               gameId: room,
               socketIds: [numClients[0], numClients[1]],
-              playerIds: [getPlayerIdFromSocketId(numClients[0]), getPlayerIdFromSocketId(numClients[1])],
+              playerIds: [
+                getPlayerIdFromSocketId(numClients[0]),
+                getPlayerIdFromSocketId(numClients[1])
+              ],
               gameData: {
                 columnClubs: data.initialClubs,
                 rowClubs: data.secondaryClubs,
@@ -278,11 +293,19 @@ export default defineEventHandler(({ node }) => {
           })
           currentRooms.push({
             id: room,
-            playerIds: [getPlayerIdFromSocketId(numClients[0]), getPlayerIdFromSocketId(numClients[1])],
+            playerIds: [
+              getPlayerIdFromSocketId(numClients[0]),
+              getPlayerIdFromSocketId(numClients[1])
+            ],
             socketIds: [numClients[0], numClients[1]],
             playersReady: [false, false],
+            playersStarted: [false, false],
             timer: null,
             willChangeTurns: 0, // 0 - won't change, 1 - will change
+            player1: numClients[player1],
+            player1Color: player1 === 0 ? 'green' : 'blue',
+            player2: numClients[player2],
+            player2Color: player2 === 0 ? 'green' : 'blue',
             gameData: {
               columnClubs: data.initialClubs,
               rowClubs: data.secondaryClubs,

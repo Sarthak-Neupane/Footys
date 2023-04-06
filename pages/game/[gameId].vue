@@ -65,7 +65,7 @@
             <tryGrid ref="grid"></tryGrid>
             <transition name="fade" mode="out-in" appear>
               <div class="relative w-full md:w-full flex justify-center items-center" v-if="!gameEnd">
-                <SearchBar @submit-answer="sendGuessToEmit" v-if="mainStore.getMyTurn()" />
+                <SearchBar @submit-answer="sendGuessToEmit" v-if="localTurn" />
               </div>
               <div class="w-full flex flex-col justify-center items-center gap-5" v-else>
                 <action-buttons @new-game="startNewGame()"></action-buttons>
@@ -76,7 +76,7 @@
             <Transition name="fade">
               <div class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full" v-if="!gameEnd">
                 <Transition name="earlyFade" mode="out-in">
-                  <div class="w-full flex justify-center items-center gap-10" v-if="mainStore.getMyTurn()">
+                  <div class="w-full flex justify-center items-center gap-10" v-if="localTurn">
                     <base-card background-back="lightWhite" :background-front="mainStore.getMyColor()" cursor="cursor-default"
                       :group-hover=false group-name="card" :grounded=false> YOUR PLAY </base-card>
                   </div>
@@ -118,6 +118,7 @@ import { useMainStore } from '~~/store/mainStore'
 import { useGridStore } from '~~/store/gridStore'
 import { v4 as uuidv4 } from 'uuid'
 import { useRouter, useRoute } from 'vue-router';
+import { useTimerStore } from '~~/store/timerStore'
 
 
 // register refs for the waiting
@@ -173,9 +174,7 @@ const { winner } = storeToRefs(store)
 
 // instantiate a null player
 const player = ref(null)
-
-// the current timer
-// const { getTimer } = storeToRefs(store)
+const localTurn = ref(false)
 
 // ref for the confetti canvas
 const canvas = ref(null)
@@ -199,7 +198,7 @@ onBeforeMount(async () => {
       gameStartsIn.value--
     } else {
       gameNotStarted.value = false
-      $socket.emit('ready', { id: player.value, gameId: store.gameId, playerTurn: mainStore.getMyTurn() })
+      $socket.emit('start', { id: player.value, gameId: store.gameId, playerTurn: mainStore.getMyTurn() })
       clearInterval(interval)
     }
   }, 1000)
@@ -211,8 +210,7 @@ onBeforeMount(async () => {
     player.value = uuidv4()
     localStorage.setItem('id', player.value)
   }
-  // store.resetGame()
-  $socket.emit('gameStart', { id: player.value, gameId: store.gameId })
+  $socket.emit('ready', { id: player.value, gameId: store.gameId })
 })
 
 
@@ -333,7 +331,7 @@ const socketEvents = () => {
   // INITIAL GAME SOCKET EVENTS STARTS
 
   $socket.on('timer', (e) => {
-    store.setTimer(e.time)
+    useTimerStore().setTimer(e.time)
   })
 
   // decide who goes first, and also set who gets which color

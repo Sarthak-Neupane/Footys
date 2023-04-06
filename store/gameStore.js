@@ -85,11 +85,11 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const getTimer = computed(() => {
-    return timer.value
+    // return timer.value
   })
 
   const setTimer = (e) => {
-    timer.value = e
+    // timer.value = e
   }
 
   const resetGame = () => {
