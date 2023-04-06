@@ -74,7 +74,6 @@ const emits = defineEmits(['animationComplete'])
 gridStore.$subscribe((mutation, state) => {
     if (state.playerIndexes.length > 0) {
         const recentIndex = state.playerIndexes[state.playerIndexes.length - 1]
-        console.log(recentIndex, 'player')
         console.log(occupiedPlayerAnswerIndexes.value)
         if (!occupiedPlayerAnswerIndexes.value.includes(recentIndex)) {
             occupiedPlayerAnswerIndexes.value.push(recentIndex)
@@ -84,8 +83,6 @@ gridStore.$subscribe((mutation, state) => {
 
     if (state.opponentIndexes.length > 0) {
         const recentIndex = state.opponentIndexes[state.opponentIndexes.length - 1]
-        console.log(recentIndex, 'opponent')
-        console.log(occupiedOpponentAnswerIndexes.value)
         if (!occupiedOpponentAnswerIndexes.value.includes(recentIndex)) {
             occupiedOpponentAnswerIndexes.value.push(recentIndex)
             occupiedOpponentGridNumbers.value.push(getTheGridNumberFromAnswerIndex(recentIndex))
@@ -100,7 +97,6 @@ const getTheGridNumberFromAnswerIndex = (answerIndex) => {
 }
 
 watch(() => occupiedPlayerGridNumbers.value, (newVal, oldVal) => {
-    console.log('player', newVal, oldVal)
     newVal.forEach((number) => {
         console.log('player', number)
         const element = grid.value.querySelector(`[data-number="${number}"]`)
@@ -112,7 +108,6 @@ watch(() => occupiedPlayerGridNumbers.value, (newVal, oldVal) => {
 })
 
 watch(() => occupiedOpponentGridNumbers.value, (newVal, oldVal) => {
-    console.log('opponent', newVal, oldVal)
     newVal.forEach((number) => {
         console.log('opponent', number)
         const element = grid.value.querySelector(`[data-number="${number}"]`)

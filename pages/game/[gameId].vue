@@ -45,7 +45,7 @@
     <div class="min-h-screen bg-lightWhite" v-else>
       <Transition name="earlyFade">
         <div class=" w-1/2 absolute z-10 top-5 left-1/2 -translate-y-0 -translate-x-1/2">
-          <base-card v-if="opponentLeft" class="" background-back="lightWhite" :background-front="getOpponentColor"
+          <base-card v-if="opponentLeft" class="" background-back="lightWhite" :background-front="mainStore.getOpponentColor()"
             cursor="cursor-default" :group-hover=false group-name="card" :grounded=false>
             Opponent Left The Game </base-card>
         </div>
@@ -53,8 +53,8 @@
       <canvas class="h-screen w-screen max-h-screen max-w-full absolute bottom-0 left-0 pointer-events-none"
         ref="canvas"></canvas>
       <div class="border-b-[1px] border-solid border-lightBlack w-full text-center py-4 md:py-6"
-        :class="`bg-${getPlayerColor}`">
-        <logo-name class="font-black text-4xl" :foe-color="getOpponentColor" @click-logo="clickLogo()"></logo-name>
+        :class="`bg-${mainStore.getMyColor()}`">
+        <logo-name class="font-black text-4xl" :foe-color="mainStore.getOpponentColor()" @click-logo="clickLogo()"></logo-name>
       </div>
       <div
         class="container md:py-5 sm:w-3/4 md:w-4/5 lg:w-4/6 my-0 mx-auto h-full flex flex-col justify-start items-center">
@@ -65,7 +65,7 @@
             <tryGrid ref="grid"></tryGrid>
             <transition name="fade" mode="out-in" appear>
               <div class="relative w-full md:w-full flex justify-center items-center" v-if="!gameEnd">
-                <SearchBar @submit-answer="sendGuessToEmit" v-if="playerTurn" />
+                <SearchBar @submit-answer="sendGuessToEmit" v-if="mainStore.getMyTurn()" />
               </div>
               <div class="w-full flex flex-col justify-center items-center gap-5" v-else>
                 <action-buttons @new-game="startNewGame()"></action-buttons>
@@ -76,13 +76,13 @@
             <Transition name="fade">
               <div class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full" v-if="!gameEnd">
                 <Transition name="earlyFade" mode="out-in">
-                  <div class="w-full flex justify-center items-center gap-10" v-if="playerTurn">
-                    <base-card background-back="lightWhite" :background-front="getPlayerColor" cursor="cursor-default"
+                  <div class="w-full flex justify-center items-center gap-10" v-if="mainStore.getMyTurn()">
+                    <base-card background-back="lightWhite" :background-front="mainStore.getMyColor()" cursor="cursor-default"
                       :group-hover=false group-name="card" :grounded=false> YOUR PLAY </base-card>
                   </div>
 
                   <div class="w-full flex justify-center items-center gap-10" v-else>
-                    <base-card background-back="lightWhite" :background-front="getOpponentColor" cursor="cursor-default"
+                    <base-card background-back="lightWhite" :background-front="mainStore.getOpponentColor()" cursor="cursor-default"
                       :group-hover=false group-name="card" :grounded=false> OPPONENT PLAY </base-card>
                   </div>
                 </Transition>
@@ -114,6 +114,7 @@
 <script setup>
 import { storeToRefs } from 'pinia'
 import { useGameStore } from '~~/store/gameStore'
+import { useMainStore } from '~~/store/mainStore'
 import { useGridStore } from '~~/store/gridStore'
 import { v4 as uuidv4 } from 'uuid'
 import { useRouter, useRoute } from 'vue-router';
@@ -125,6 +126,7 @@ const gameStartsIn = ref(3)
 
 // register game store and router
 const store = useGameStore()
+const mainStore = useMainStore()
 const gridStore = useGridStore()
 const $router = useRouter()
 
@@ -165,18 +167,12 @@ const playerWantingToLeave = ref(false)
 const playerDecidedToLeave = ref(null)
 
 // get the state from store
-const { getPlayerColor } = storeToRefs(store)
-const { getOpponentColor } = storeToRefs(store)
-const { playerTurn } = storeToRefs(store)
 const { gameResult } = storeToRefs(store)
 const { gameEnd } = storeToRefs(store)
 const { winner } = storeToRefs(store)
 
 // instantiate a null player
 const player = ref(null)
-
-// instantiate an empty guess. Will be filled later, when the searchBar component emits the guess.
-const currentAnswer = ref({});
 
 // the current timer
 // const { getTimer } = storeToRefs(store)
@@ -189,7 +185,6 @@ const matchmakingText = ref('Finding a game...')
 const searching = ref(null)
 const gameFound = ref(false)
 const joiningGameIn = ref(3)
-const resetGrid = ref(false)
 const timeout = ref(0)
 
 
@@ -204,7 +199,7 @@ onBeforeMount(async () => {
       gameStartsIn.value--
     } else {
       gameNotStarted.value = false
-      $socket.emit('ready', { id: player.value, gameId: store.gameId, playerTurn: store.playerTurn })
+      $socket.emit('ready', { id: player.value, gameId: store.gameId, playerTurn: mainStore.getMyTurn() })
       clearInterval(interval)
     }
   }, 1000)
@@ -273,7 +268,7 @@ const isWinner = computed(() => {
 // computed to return the player color class name
 const returnClass = computed(() => {
   if (isWinner) {
-    return `text-${getPlayerColor.value}`
+    return `text-${getMyColor.value}`
   } else {
     return 'text-lightBlack'
   }
@@ -307,6 +302,12 @@ const sendGuessToEmit = async (e) => {
   })
 }
 
+gridStore.$subscribe((mut, state) => {
+  setTimeout(() => {
+    $socket.emit('changeTurns', { gameId: store.gameId })
+  }, 500)
+})
+
 // PLAY AGAIN METHODS --------------------
 // Search for a new game
 const startNewGame = () => {
@@ -338,11 +339,15 @@ const socketEvents = () => {
   // decide who goes first, and also set who gets which color
   $socket.on('startGame', (e) => {
     if (e.player1 === $socket.id) {
-      store.setInitialPlayerTurn(true)
-      store.setPlayerColor(e.color1)
+      mainStore.setMyTurn(true)
+      mainStore.setMyColor(e.color1)
+      mainStore.setOpponentColor(e.color2)
+      console.log(mainStore.getMyTurn())
     } else {
-      store.setInitialPlayerTurn(false)
-      store.setPlayerColor(e.color2)
+      mainStore.setMyTurn(false)
+      mainStore.setMyColor(e.color2)
+      mainStore.setOpponentColor(e.color1)
+      console.log(mainStore.getMyTurn())
     }
   })
 
@@ -352,8 +357,12 @@ const socketEvents = () => {
   })
 
   // change the current turn if the server emits a 'changeTurn' event
-  $socket.on('changeTurn', (e) => {
-    store.changePlayerTurn(e)
+  $socket.on('changeTurns', (e, fn) => {
+    console.log(e)
+    mainStore.changeTurns()
+    console.log('changeTurns')
+    console.log('myTurn', mainStore.getMyTurn())
+    fn()
   })
 
   // check if the 'gameDecided is emitted by the server'

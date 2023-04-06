@@ -138,8 +138,8 @@ export default defineEventHandler(({ node }) => {
         clearTimer(exactRoom.timer)
         checkAnswer(socket, data)
       })
-      socket.on('changeTurn', data => {
-        changeTurn(socket, data)
+      socket.on('changeTurns', (data) => {
+        changeTurns(socket, data)
       })
       socket.on('gameDecided', data => {
         gameDecided(socket, data)
@@ -231,15 +231,20 @@ export default defineEventHandler(({ node }) => {
       }
     }
 
-    const changeTurn = (socket, data) => {
-      io?.to(data.gameId).emit('changeTurn', {
-        player: data.id
-      })
+    const changeTurns = (socket, data) => {
       const exactRoom = getExactRoom(data.gameId)
-      exactRoom.timer = registerTimer(socket, {
-        gameId: data.gameId,
-        time: 30
-      })
+      console.log('change turns', socket.customId, 'will change turns', exactRoom.willChangeTurns)
+      if(exactRoom.willChangeTurns){
+        io.to(data.gameId).emit('changeTurns', [], ()=>{
+          exactRoom.willChangeTurns = 0
+          exactRoom.timer = registerTimer(socket, {
+            gameId: data.gameId,
+            time: 30
+          })
+        })
+      } else {
+        exactRoom.willChangeTurns++
+      }
     }
 
     const leaveRoom = (socket, data) => {
@@ -277,6 +282,7 @@ export default defineEventHandler(({ node }) => {
             socketIds: [numClients[0], numClients[1]],
             playersReady: [false, false],
             timer: null,
+            willChangeTurns: 0, // 0 - won't change, 1 - will change
             gameData: {
               columnClubs: data.initialClubs,
               rowClubs: data.secondaryClubs,

@@ -49,39 +49,39 @@ export const useGameStore = defineStore('game', () => {
   }
 
   const getPlayerColor = computed(() => {
-    return playerColor.value
+    // return playerColor.value
   })
   const getOpponentColor = computed(() => {
-    return opponentColor.value
+    // return opponentColor.value
   })
   const setPlayerColor = (color) => {
-    playerColor.value = color
-    opponentColor.value = (color) === 'green' ? 'blue' : 'green'
+    // playerColor.value = color
+    // opponentColor.value = (color) === 'green' ? 'blue' : 'green'
   }
 
   const setInitialPlayerTurn = e => {
-    playerTurn.value = e
+    // playerTurn.value = e
   }
   const changePlayerTurn = (e) => {
-    if(e.player === currentPlayer.value) {
-      playerTurn.value = false
-    } else {
-      playerTurn.value = true
-    }
+    // if(e.player === currentPlayer.value) {
+    //   playerTurn.value = false
+    // } else {
+    //   playerTurn.value = true
+    // }
   }
   
   const getPlayerGuesses = computed(() => {
-    return playerGuesses.value
+    // return playerGuesses.value
   })
   const addPlayerGuess = guess => {
-    playerGuesses.value.push(guess)
+    // playerGuesses.value.push(guess)
   }
   
   const getOpponentGuesses = computed(() => {
-    return opponenetGuesses.value
+    // return opponenetGuesses.value
   })
   const addOpponentGuess = guess => {
-    opponenetGuesses.value.push(guess)
+    // opponenetGuesses.value.push(guess)
   }
 
   const getTimer = computed(() => {

@@ -26,18 +26,13 @@ const localPlayerGuessList = ref([])
 const localOpponentGuessList = ref([])
 
 gridStore.$subscribe((mut, state)=>{
-  console.log(state.currentAnswer)
   if(state.currentAnswer.meta.player === localStorage.getItem('id')){
     localPlayerGuessList.value.push(state.currentAnswer) 
-    console.log('player', localPlayerGuessList.value)
   } else {
     localOpponentGuessList.value.push(state.currentAnswer)
-    console.log('opponent', localOpponentGuessList.value)
   }
 })
 
-// const { getPlayerGuesses } = storeToRefs(store)
-// const { getOpponentGuesses } = storeToRefs(store)
 const { getPlayerColor } = storeToRefs(store)
 const { getOpponentColor } = storeToRefs(store)
 
