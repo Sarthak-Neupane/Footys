@@ -31,7 +31,6 @@ const checkAnswer = async (socket, data, isEmpty) => {
       }
     })
   }
-  console.log('checked winner data', checkedWinnerData)
   io.to(data.gameId).emit('checkedAnswer', {
     details: {
       meta: checkedData.meta,

@@ -48,7 +48,9 @@ export const useMainStore = defineStore('main', () => {
   })
 
   const changeTurns = () => {
-    myTurn.value = !myTurn.value
+    setTimeout(() => {
+      myTurn.value = !myTurn.value
+    }, 1000)
   }
 
   return {

@@ -45,8 +45,9 @@
     <div class="min-h-screen bg-lightWhite" v-else>
       <Transition name="earlyFade">
         <div class=" w-1/2 absolute z-10 top-5 left-1/2 -translate-y-0 -translate-x-1/2">
-          <base-card v-if="opponentLeft" class="" background-back="lightWhite" :background-front="mainStore.getOpponentColor"
-            cursor="cursor-default" :group-hover=false group-name="card" :grounded=false>
+          <base-card v-if="opponentLeft" class="" background-back="lightWhite"
+            :background-front="mainStore.getOpponentColor" cursor="cursor-default" :group-hover=false group-name="card"
+            :grounded=false>
             Opponent Left The Game </base-card>
         </div>
       </Transition>
@@ -54,7 +55,8 @@
         ref="canvas"></canvas>
       <div class="border-b-[1px] border-solid border-lightBlack w-full text-center py-4 md:py-6"
         :class="`bg-${mainStore.getMyColor}`">
-        <logo-name class="font-black text-4xl" :foe-color="mainStore.getOpponentColor" @click-logo="clickLogo()"></logo-name>
+        <logo-name class="font-black text-4xl" :foe-color="mainStore.getOpponentColor"
+          @click-logo="clickLogo()"></logo-name>
       </div>
       <div
         class="container md:py-5 sm:w-3/4 md:w-4/5 lg:w-4/6 my-0 mx-auto h-full flex flex-col justify-start items-center">
@@ -65,9 +67,11 @@
             <tryGrid ref="grid"></tryGrid>
             <transition name="fade" mode="out-in" appear>
               <div class="relative w-full md:w-full flex justify-center items-center" v-if="!getGameEnd">
-                
-                  <SearchBar @submit-answer="sendGuessToEmit" v-if="getMyTurn" />
-                
+                <Transition name="fade" mode="out-in" appear>
+                  <div v-if="getMyTurn">
+                    <SearchBar @submit-answer="sendGuessToEmit" />
+                  </div>
+                </Transition>
               </div>
               <div class="w-full flex flex-col justify-center items-center gap-5" v-else>
                 <action-buttons @new-game="startNewGame()"></action-buttons>
@@ -79,13 +83,14 @@
               <div class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full" v-if="!getGameEnd">
                 <Transition name="earlyFade" mode="out-in">
                   <div class="w-full flex justify-center items-center gap-10" v-if="getMyTurn">
-                    <base-card background-back="lightWhite" :background-front="mainStore.getMyColor" cursor="cursor-default"
-                      :group-hover=false group-name="card" :grounded=false> YOUR PLAY </base-card>
+                    <base-card background-back="lightWhite" :background-front="mainStore.getMyColor"
+                      cursor="cursor-default" :group-hover=false group-name="card" :grounded=false> YOUR PLAY </base-card>
                   </div>
 
                   <div class="w-full flex justify-center items-center gap-10" v-else>
-                    <base-card background-back="lightWhite" :background-front="mainStore.getOpponentColor" cursor="cursor-default"
-                      :group-hover=false group-name="card" :grounded=false> OPPONENT PLAY </base-card>
+                    <base-card background-back="lightWhite" :background-front="mainStore.getOpponentColor"
+                      cursor="cursor-default" :group-hover=false group-name="card" :grounded=false> OPPONENT PLAY
+                    </base-card>
                   </div>
                 </Transition>
                 <div class="relative h-20 w-20 flex justify-center items-center">
@@ -296,7 +301,7 @@ const dontLeaveGame = () => {
 
 // send the guess to server and grid. After the 'submit-answer' event is emitted by the searchBar component
 const sendGuessToEmit = async (e) => {
-  if(!getMyTurn.value) return
+  if (!getMyTurn.value) return
   $socket.emit('checkAnswer', {
     answer: {
       ...e,
@@ -305,34 +310,13 @@ const sendGuessToEmit = async (e) => {
 }
 
 gridStore.$subscribe((mut, state) => {
-  if(store.getGameEnd) return
-  setTimeout(() => {
-    $socket.emit('changeTurns', { gameId: store.getGameId })
-  }, 500)
+  if (store.getGameEnd) return
+  $socket.emit('changeTurns', { gameId: store.getGameId })
 })
-
-// PLAY AGAIN METHODS --------------------
-// // Search for a new game
-// const startNewGame = () => {
-//   searching.value = true  // make the player know that they are searching for a game
-//   gameFound.value = false  // make the player know that they have not found a game yet
-//   $socket.emit('leaveRoom', { id: player.value, gameId: store.getGameId })  // leave the current room
-// }
-
-// // Cancel the search of a new game
-// const cancelSearch = () => {
-//   searching.value = false;
-//   gameFound.value = false;
-//   clearTimeout(timeout.value)
-//   $socket.emit('leaveLobby', { id: store.getCurrentPlayer })  // leave the lobby
-// }
-// // PLAY AGAIN METHODS ENDS -----------------
-// METHODS ENDS -----------------------------------
 
 
 // SOCKET EVENTS STARTS ----------------------------
 const socketEvents = () => {
-
   // INITIAL GAME SOCKET EVENTS STARTS
   $socket.on('timer', (e) => {
     useTimerStore().setTimer(e.time)
@@ -356,8 +340,8 @@ const socketEvents = () => {
   // send the current answer to the grid component is the server emits a 'guess' event
   $socket.on('checkedAnswer', (data) => {
     gridStore.setCurrentAnswer(data.details)
-    if(data.winner){
-      if(player.value === data.details.meta.player){
+    if (data.winner) {
+      if (player.value === data.details.meta.player) {
         store.setGameEnd()
         store.setGameResult('win', data.details.meta.player)
       } else {
@@ -365,9 +349,9 @@ const socketEvents = () => {
         store.setGameResult('lose', data.details.meta.player)
       }
     }
-    if(data.draw){
+    if (!data.winner && gridStore.getGridFull) {
       store.setGameEnd()
-      store.setGameResult('draw', data.details.meta.player)
+      store.setGameResult('draw', null)
     }
   })
 
@@ -376,29 +360,6 @@ const socketEvents = () => {
     mainStore.changeTurns()
     fn()
   })
-
-  // check if the 'gameDecided is emitted by the server'
-  // $socket.on('gameDecided', (e) => {
-  //   // check if the game has a winner
-  //   if (e.winner) {
-  //     // If Yes...
-  //     store.setResult(e.winner === player.value ? 'win' : 'lose')  // set the result of the current player
-  //     store.setWinner(e.winner)    // set the winner of the game
-  //     store.setGameEnd()   // end the game
-  //     // check if the current player is the winner
-  //     if (e.winner === player.value) {
-  //       // If Yes add the confetti
-  //       $confetti.addConfetti()
-  //     }
-  //   } else {
-  //     // If No....
-  //     store.setResult('draw')  // set the game result to 'draw'
-  //     store.setWinner(null)  // set the winner to null
-  //     store.setGameEnd()    // end the game
-  //   }
-  // })
-
-  // INITIAL GAME SOCKET EVENTS ENDS ---------------------------
 
   // FOR PLAY AGAIN SOCKET EVENTS ----------------------
 
@@ -411,63 +372,18 @@ const socketEvents = () => {
     timeout.value = delayTime
   })
 
-  // check to see if the client has found a game. If yes, emit an event to join the game
-  // $socket.on('gameFound', (data) => {
-  //   if (data.players.includes(store.getCurrentSocketId)) {
-  //     matchmakingText.value = 'Game Found'
-  //     gameFound.value = true
-  //     $socket.emit('joinGame', { id: store.getCurrentPlayer, gameId: data.gameId })
-  //   }
-  // })
-
-  // Check if the player has joined the game
-  // check to see if the client has joined the game. If yes, set the game id into the store. 
-  $socket.on('gameJoined', (data) => {
-    matchmakingText.value = `Joining game...`
-  })
-
-  $socket.on('bothPlayersJoined', (data) => {
-    if (data.isJoined) {
-      const Newinterval = setInterval(() => {
-        if (joiningGameIn.value > 0) {
-          matchmakingText.value = `Joining game in ${joiningGameIn.value}...`
-          joiningGameIn.value -= 1
-        } else {
-          store.resetGame()
-          clearInterval(Newinterval)
-          joiningGameIn.value = 3
-          // set the game id to the store.
-          store.setGameId(data.gameId)
-
-          // set the gameData to store
-          gridStore.setColumnClubs(data.gameData.columnClubs)
-          gridStore.setRowClubs(data.gameData.rowClubs)
-          gridStore.setMatches(data.gameData.matches)
-          gridStore.setGridAnswers()
-
-          $router.push(`/game/${store.getGameId}`)
-        }
-      }, 1000)
-
-    }
-  })
 
   $socket.on('userLeft', () => {
     if (!store.getGameEnd) {
       opponentLeft.value = true
-      // store.setGameEnd()   // end the game
-      // store.setResult('win')  // set the result of the current player
+      store.setGameEnd()   // end the game
       store.setGameResult('win', player.value)
-      // store.setWinner(player.value)    // set the winner of the game
       $confetti.addConfetti()
     }
   })
-
-
   // PLAY AGAIN SOCKET EVENTS END ---------------------------------
 }
 // SOCKET EVENTS ENDS ------------------------------------------
-
 
 // REGISTER THE SOCKET EVENT
 if ($socket && $socket.connected) {
@@ -512,5 +428,4 @@ if ($socket && $socket.connected) {
 .earlyFade-leave-to {
   opacity: 0;
   transform: translateY(-20px);
-}
-</style>
+}</style>

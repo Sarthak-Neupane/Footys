@@ -11,7 +11,6 @@
 </template>
 
 <script setup>
-import { useGameStore } from '~~/store/gameStore';
 import { useMainStore } from '~~/store/mainStore';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
