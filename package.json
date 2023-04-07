@@ -16,6 +16,7 @@
     "tailwindcss-text-fill-stroke": "^1.1.2"
   },
   "dependencies": {
+    "@lottiefiles/lottie-player": "^1.7.1",
     "@nuxt/kit": "^3.2.3",
     "@nuxtjs/color-mode": "^3.2.0",
     "@nuxtjs/google-fonts": "^2.0.0",
