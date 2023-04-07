@@ -64,8 +64,10 @@
               @player-guess="sendGuessToStore" @game-ended="gameEnded"></Grid> -->
             <tryGrid ref="grid"></tryGrid>
             <transition name="fade" mode="out-in" appear>
-              <div class="relative w-full md:w-full flex justify-center items-center" v-if="!gameEnd">
-                <SearchBar @submit-answer="sendGuessToEmit" v-if="getMyTurn" />
+              <div class="relative w-full md:w-full flex justify-center items-center" v-if="!getGameEnd">
+                
+                  <SearchBar @submit-answer="sendGuessToEmit" v-if="getMyTurn" />
+                
               </div>
               <div class="w-full flex flex-col justify-center items-center gap-5" v-else>
                 <action-buttons @new-game="startNewGame()"></action-buttons>
@@ -74,7 +76,7 @@
           </div>
           <div class="w-full h-full flex flex-col justify-between items-center gap-7 md:gap-10 lg:gap-14">
             <Transition name="fade">
-              <div class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full" v-if="!gameEnd">
+              <div class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full" v-if="!getGameEnd">
                 <Transition name="earlyFade" mode="out-in">
                   <div class="w-full flex justify-center items-center gap-10" v-if="getMyTurn">
                     <base-card background-back="lightWhite" :background-front="mainStore.getMyColor" cursor="cursor-default"
@@ -91,7 +93,7 @@
                 </div>
               </div>
               <div class="result" v-else>
-                <h1 class="font-black text-center text-4xl lg:text-6xl" v-if="gameResult != 'draw'">
+                <h1 class="font-black text-center text-4xl lg:text-6xl" v-if="getGameResult != 'draw'">
                   <span :class="returnClass"> YOU </span><span :class="returnClass">{{ isWinner ? 'WIN' :
                     'LOSE'
                   }}</span>
@@ -153,7 +155,7 @@ definePageMeta({
     }
   ],
   validate: async (route) => {
-    if (useGameStore().gameId == null || useGameStore().gameId == undefined || route.params.gameId != useGameStore().gameId) {
+    if (useGameStore().getGameId == null || useGameStore().getGameId == undefined || route.params.gameId != useGameStore().getGameId) {
       return false
     } else {
       return true
@@ -167,16 +169,13 @@ definePageMeta({
 // the grid ref
 const grid = ref()
 
-
 // refs for player leaving a game prematurely
 const opponentLeft = ref(false)
 const playerWantingToLeave = ref(false)
 const playerDecidedToLeave = ref(null)
 
 // get the state from store
-const { gameResult } = storeToRefs(store)
-const { gameEnd } = storeToRefs(store)
-const { winner } = storeToRefs(store)
+const { getGameEnd, getWinner, getGameResult } = storeToRefs(store)
 
 // instantiate a null player
 const player = ref(null)
@@ -203,7 +202,7 @@ onBeforeMount(async () => {
       gameStartsIn.value--
     } else {
       gameNotStarted.value = false
-      $socket.emit('start', { id: player.value, gameId: store.gameId, playerTurn: getMyTurn.value })
+      $socket.emit('start', { id: player.value, gameId: store.getGameId, playerTurn: getMyTurn.value })
       clearInterval(interval)
     }
   }, 1000)
@@ -215,17 +214,17 @@ onBeforeMount(async () => {
     player.value = uuidv4()
     localStorage.setItem('id', player.value)
   }
-  $socket.emit('ready', { id: player.value, gameId: store.gameId })
+  $socket.emit('ready', { id: player.value, gameId: store.getGameId })
 })
 
 
 onBeforeRouteLeave((to, from, next) => {
-  if (!store.gameEnd && !opponentLeft.value && store.gameId != null) {
+  if (!store.getGameEnd && !opponentLeft.value && store.getGameId != null) {
     playerWantingToLeave.value = true
     if (playerDecidedToLeave.value != null) {
       if (playerDecidedToLeave.value === true) {
-        if (!store.gameEnd && !opponentLeft.value && store.gameId != null) {
-          // $socket.emit('userLeft', { id: player.value, gameId: store.gameId })
+        if (!store.getGameEnd && !opponentLeft.value && store.getGameId != null) {
+          // $socket.emit('userLeft', { id: player.value, gameId: store.getGameId })
           next()
         }
       } else {
@@ -237,7 +236,6 @@ onBeforeRouteLeave((to, from, next) => {
   } else {
     next()
   }
-
 })
 
 
@@ -247,8 +245,8 @@ onBeforeRouteLeave((to, from, next) => {
 
 watch(playerDecidedToLeave, (current, previous) => {
   if (current === true) {
-    if (!store.gameEnd && !opponentLeft.value && store.gameId != null) {
-      $socket.emit('userLeft', { id: player.value, gameId: store.gameId })
+    if (!store.getGameEnd && !opponentLeft.value && store.getGameId != null) {
+      $socket.emit('userLeft', { id: player.value, gameId: store.getGameId })
       $router.push('/')
     } else {
       $router.push('/')
@@ -265,13 +263,13 @@ watch(playerDecidedToLeave, (current, previous) => {
 
 // computed to check if the player is the winner
 const isWinner = computed(() => {
-  return winner.value === player.value
+  return getWinner.value === player.value
 })
 
 // computed to return the player color class name
 const returnClass = computed(() => {
   if (isWinner) {
-    return `text-${getMyColor.value}`
+    return `text-${mainStore.getMyColor.value}`
   } else {
     return 'text-lightBlack'
   }
@@ -298,35 +296,37 @@ const dontLeaveGame = () => {
 
 // send the guess to server and grid. After the 'submit-answer' event is emitted by the searchBar component
 const sendGuessToEmit = async (e) => {
+  if(!getMyTurn.value) return
   $socket.emit('checkAnswer', {
     answer: {
       ...e,
-    }, id: player.value, gameId: store.gameId
+    }, id: player.value, gameId: store.getGameId
   })
 }
 
 gridStore.$subscribe((mut, state) => {
+  if(store.getGameEnd) return
   setTimeout(() => {
-    $socket.emit('changeTurns', { gameId: store.gameId })
+    $socket.emit('changeTurns', { gameId: store.getGameId })
   }, 500)
 })
 
 // PLAY AGAIN METHODS --------------------
-// Search for a new game
-const startNewGame = () => {
-  searching.value = true  // make the player know that they are searching for a game
-  gameFound.value = false  // make the player know that they have not found a game yet
-  $socket.emit('leaveRoom', { id: player.value, gameId: store.gameId })  // leave the current room
-}
+// // Search for a new game
+// const startNewGame = () => {
+//   searching.value = true  // make the player know that they are searching for a game
+//   gameFound.value = false  // make the player know that they have not found a game yet
+//   $socket.emit('leaveRoom', { id: player.value, gameId: store.getGameId })  // leave the current room
+// }
 
-// Cancel the search of a new game
-const cancelSearch = () => {
-  searching.value = false;
-  gameFound.value = false;
-  clearTimeout(timeout.value)
-  $socket.emit('leaveLobby', { id: store.getCurrentPlayer })  // leave the lobby
-}
-// PLAY AGAIN METHODS ENDS -----------------
+// // Cancel the search of a new game
+// const cancelSearch = () => {
+//   searching.value = false;
+//   gameFound.value = false;
+//   clearTimeout(timeout.value)
+//   $socket.emit('leaveLobby', { id: store.getCurrentPlayer })  // leave the lobby
+// }
+// // PLAY AGAIN METHODS ENDS -----------------
 // METHODS ENDS -----------------------------------
 
 
@@ -334,7 +334,6 @@ const cancelSearch = () => {
 const socketEvents = () => {
 
   // INITIAL GAME SOCKET EVENTS STARTS
-
   $socket.on('timer', (e) => {
     useTimerStore().setTimer(e.time)
   })
@@ -356,38 +355,48 @@ const socketEvents = () => {
 
   // send the current answer to the grid component is the server emits a 'guess' event
   $socket.on('checkedAnswer', (data) => {
-    gridStore.setCurrentAnswer(data)
+    gridStore.setCurrentAnswer(data.details)
+    if(data.winner){
+      if(player.value === data.details.meta.player){
+        store.setGameEnd()
+        store.setGameResult('win', data.details.meta.player)
+      } else {
+        store.setGameEnd()
+        store.setGameResult('lose', data.details.meta.player)
+      }
+    }
+    if(data.draw){
+      store.setGameEnd()
+      store.setGameResult('draw', data.details.meta.player)
+    }
   })
 
   // change the current turn if the server emits a 'changeTurn' event
   $socket.on('changeTurns', (e, fn) => {
-    console.log(e)
     mainStore.changeTurns()
-    console.log('changeTurns')
-    console.log('myTurn', getMyTurn.value)
     fn()
   })
 
   // check if the 'gameDecided is emitted by the server'
-  $socket.on('gameDecided', (e) => {
-    // check if the game has a winner
-    if (e.winner) {
-      // If Yes...
-      store.setResult(e.winner === player.value ? 'win' : 'lose')  // set the result of the current player
-      store.setWinner(e.winner)    // set the winner of the game
-      store.setGameEnd()   // end the game
-      // check if the current player is the winner
-      if (e.winner === player.value) {
-        // If Yes add the confetti
-        $confetti.addConfetti()
-      }
-    } else {
-      // If No....
-      store.setResult('draw')  // set the game result to 'draw'
-      store.setWinner(null)  // set the winner to null
-      store.setGameEnd()    // end the game
-    }
-  })
+  // $socket.on('gameDecided', (e) => {
+  //   // check if the game has a winner
+  //   if (e.winner) {
+  //     // If Yes...
+  //     store.setResult(e.winner === player.value ? 'win' : 'lose')  // set the result of the current player
+  //     store.setWinner(e.winner)    // set the winner of the game
+  //     store.setGameEnd()   // end the game
+  //     // check if the current player is the winner
+  //     if (e.winner === player.value) {
+  //       // If Yes add the confetti
+  //       $confetti.addConfetti()
+  //     }
+  //   } else {
+  //     // If No....
+  //     store.setResult('draw')  // set the game result to 'draw'
+  //     store.setWinner(null)  // set the winner to null
+  //     store.setGameEnd()    // end the game
+  //   }
+  // })
 
   // INITIAL GAME SOCKET EVENTS ENDS ---------------------------
 
@@ -397,26 +406,24 @@ const socketEvents = () => {
   $socket.on('roomLeft', (e) => {
     gameFound.value = false
     const delayTime = setTimeout(() => {
-      $socket.emit('joinLobby', { id: store.getCurrentPlayer })    // join the lobby after exiting the room
+      $socket.emit('joinLobby', { id: mainStore.getMyId })    // join the lobby after exiting the room
     }, 1000)
     timeout.value = delayTime
   })
 
   // check to see if the client has found a game. If yes, emit an event to join the game
-  $socket.on('gameFound', (data) => {
-    if (data.players.includes(store.getCurrentSocketId)) {
-      matchmakingText.value = 'Game Found'
-      gameFound.value = true
-      $socket.emit('joinGame', { id: store.getCurrentPlayer, gameId: data.gameId })
-    }
-  })
+  // $socket.on('gameFound', (data) => {
+  //   if (data.players.includes(store.getCurrentSocketId)) {
+  //     matchmakingText.value = 'Game Found'
+  //     gameFound.value = true
+  //     $socket.emit('joinGame', { id: store.getCurrentPlayer, gameId: data.gameId })
+  //   }
+  // })
 
   // Check if the player has joined the game
   // check to see if the client has joined the game. If yes, set the game id into the store. 
   $socket.on('gameJoined', (data) => {
-
     matchmakingText.value = `Joining game...`
-
   })
 
   $socket.on('bothPlayersJoined', (data) => {
@@ -438,7 +445,7 @@ const socketEvents = () => {
           gridStore.setMatches(data.gameData.matches)
           gridStore.setGridAnswers()
 
-          $router.push(`/game/${store.gameId}`)
+          $router.push(`/game/${store.getGameId}`)
         }
       }, 1000)
 
@@ -446,11 +453,12 @@ const socketEvents = () => {
   })
 
   $socket.on('userLeft', () => {
-    if (!store.gameEnd) {
+    if (!store.getGameEnd) {
       opponentLeft.value = true
-      store.setGameEnd()   // end the game
-      store.setResult('win')  // set the result of the current player
-      store.setWinner(player.value)    // set the winner of the game
+      // store.setGameEnd()   // end the game
+      // store.setResult('win')  // set the result of the current player
+      store.setGameResult('win', player.value)
+      // store.setWinner(player.value)    // set the winner of the game
       $confetti.addConfetti()
     }
   })

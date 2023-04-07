@@ -6,7 +6,33 @@ let rowClubs = []
 let matches = []
 let gridAnswers = []
 let occupiedIndexes = []
+let occupiedIndexesDetails = []
 let result
+
+const getDataNumbersFromIndexNumber = (indexNumber) => {
+  switch (indexNumber) {
+      case 0:
+          return 8;
+      case 1:
+          return 3;
+      case 2:
+          return 4;
+      case 3:
+          return 1;
+      case 4:
+          return 5;
+      case 5:
+          return 9;
+      case 6:
+          return 6;
+      case 7:
+          return 7;
+      case 8:
+          return 2;
+      default:
+          return null;
+  }
+}
 
 const getData = async getId => {
   console.log('getting data')
@@ -37,6 +63,12 @@ const checkAnswer = async data => {
     for (let e of elem) {
       if (e.id === data.answer?.id) {
         occupiedIndexes.push(ind)
+        occupiedIndexesDetails.push({
+          index: ind,
+          gridNumber: getDataNumbersFromIndexNumber(ind),
+          player: data.player,
+          socketId: data.socket
+        })
         result = { correct: true, index: ind, occupiedIndexes: occupiedIndexes }
         break outerloop
       } else {
@@ -80,6 +112,7 @@ export default defineEventHandler(async event => {
       answer: body.meta.answer,
       player: body.meta.player,
       socketId: body.meta.socket
-    }
+    },
+    occupiedIndexesDetails: occupiedIndexesDetails
   }
 })

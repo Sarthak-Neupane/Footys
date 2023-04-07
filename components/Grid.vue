@@ -198,7 +198,6 @@ const checkWinner = (A, arr_size, sum)=>{
         }
         return false;
 }
-
 </script>
 
 

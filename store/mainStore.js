@@ -5,6 +5,7 @@ export const useMainStore = defineStore('main', () => {
   const myColor = ref(null)
   const opponentColor = ref(null)
   const myId = ref(null)
+  const mySocketId = ref(null)
 
   const setMyId = id => {
     myId.value = id
@@ -12,7 +13,15 @@ export const useMainStore = defineStore('main', () => {
 
   const getMyId = computed(() => {
     return myId.value
-    })
+  })
+
+  const setMySocketId = id => {
+    mySocketId.value = id
+  }
+
+  const getMySocketId = computed(() => {
+    return mySocketId.value
+  })
 
   const setMyColor = color => {
     myColor.value = color
@@ -20,7 +29,7 @@ export const useMainStore = defineStore('main', () => {
 
   const getMyColor = computed(() => {
     return myColor.value
-    })
+  })
 
   const setOpponentColor = color => {
     opponentColor.value = color
@@ -28,7 +37,7 @@ export const useMainStore = defineStore('main', () => {
 
   const getOpponentColor = computed(() => {
     return opponentColor.value
-    })
+  })
 
   const setMyTurn = turn => {
     myTurn.value = turn
@@ -45,6 +54,8 @@ export const useMainStore = defineStore('main', () => {
   return {
     setMyId,
     getMyId,
+    setMySocketId,
+    getMySocketId,
     setMyColor,
     getMyColor,
     setOpponentColor,

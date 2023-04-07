@@ -100,9 +100,7 @@ const getTheGridNumberFromAnswerIndex = (answerIndex) => {
 
 watch(() => occupiedPlayerGridNumbers.value, (newVal, oldVal) => {
     newVal.forEach((number) => {
-        console.log('player', number)
         const element = grid.value.querySelector(`[data-number="${number}"]`)
-        console.log(element)
         gsapAnimation(element, true)
     })
 }, {

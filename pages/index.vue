@@ -44,7 +44,7 @@ import { useRouter } from 'vue-router';
 
 
 // state management and router
-const store = useGameStore();
+const gameStore = useGameStore();
 const gridStore = useGridStore();
 const mainStore = useMainStore();
 const timerStore = useTimerStore();
@@ -68,11 +68,10 @@ const socketError = reactive({
 
 // set the player id if it doesn't exist
 onBeforeMount(async () => {
-  store.resetGame()
   if (localStorage.getItem('id') === null) {
     localStorage.setItem('id', uuidv4())
   }
-  store.setCurrentPlayer(localStorage.getItem('id'))
+  mainStore.setMyId(localStorage.getItem('id'))
 })
 
 // join the lobby for matchmaking
@@ -82,7 +81,7 @@ const findAGame = () => {
   gameFound.value = false;
   matchmakingText.value = 'FINDING A GAME'
   const delayTime = setTimeout(() => {
-    $socket.emit('joinLobby', { id: store.getCurrentPlayer })
+    $socket.emit('joinLobby', { id: mainStore.getMyId })
   }, 1000)
   timeout.value = delayTime
 }
@@ -92,22 +91,22 @@ const cancelSearch = () => {
   searching.value = false;
   gameFound.value = false;
   clearTimeout(timeout.value)
-  $socket.emit('leaveLobby', { id: store.getCurrentPlayer })
+  $socket.emit('leaveLobby', { id: mainStore.getMyId })
 }
 
 // SOCKET EVENTS STARTS
 const socketEvents = () => {
   // check to see if the client has successfully joined the lobby 
   $socket.on('lobbyJoined', (data) => {
-    store.setCurrentSocketId(data.playerSocketId)
+    mainStore.setMySocketId(data.playerSocketId)
   })
 
   // check to see if the client has found a game. If yes, emit an event to join the game
   $socket.on('gameFound', (data) => {
-    if (data.players.includes(store.getCurrentSocketId)) {
+    if (data.players.includes(mainStore.getMySocketId)) {
       matchmakingText.value = 'Game Found'
       gameFound.value = true
-      $socket.emit('joinGame', { id: store.getCurrentPlayer, gameId: data.gameId })
+      $socket.emit('joinGame', { id: mainStore.getMyId, gameId: data.gameId })
     }
   })
 
@@ -118,6 +117,7 @@ const socketEvents = () => {
 
   $socket.on('bothPlayersJoined', (data) => {
     if (data.isJoined) {
+      console.log(data)
       const interval = setInterval(() => {
         if (joiningGameIn.value > 0) {
           matchmakingText.value = `Joining game in ${joiningGameIn.value}...`
@@ -126,16 +126,15 @@ const socketEvents = () => {
           clearInterval(interval)
           joiningGameIn.value = 3
           // set the game id to the store.
-          store.setGameId(data.gameId)
+          gameStore.setGameId(data.gameId)
 
           // set the gameData to store
           gridStore.setColumnClubs(data.gameData.columnClubs)
           gridStore.setRowClubs(data.gameData.rowClubs) 
 
-          $router.push(`/game/${store.gameId}`)
+          $router.push(`/game/${data.gameId}`)
         }
       }, 1000)
-
     }
   })
 

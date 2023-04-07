@@ -2,13 +2,13 @@ import { Server } from 'socket.io'
 import { instrument } from '@socket.io/admin-ui'
 import { v4 as uuidv4 } from 'uuid'
 
-
 let io
 let currentRooms = []
 let connectedSockets = []
 let connectedIds = []
 
 const checkAnswer = async (socket, data, isEmpty) => {
+  let checkedWinnerData = { result: false };
   const checkedData = await $fetch(`/api/Game/gameData/${data.gameId}`, {
     method: 'POST',
     body: {
@@ -21,9 +21,23 @@ const checkAnswer = async (socket, data, isEmpty) => {
       action: isEmpty ? 'emptyCheck' : 'checkAnswer'
     }
   })
+  if(checkedData.result.correct){
+    checkedWinnerData = await $fetch(`/api/Game/checkWinner`, {
+      method: 'POST',
+      body: {
+        value: checkedData.occupiedIndexesDetails,
+        gameId: data.gameId,
+        player: checkedData.meta.player
+      }
+    })
+  }
+  console.log('checked winner data', checkedWinnerData)
   io.to(data.gameId).emit('checkedAnswer', {
-    meta: checkedData.meta,
-    result: checkedData.result
+    details: {
+      meta: checkedData.meta,
+      result: checkedData.result,
+    },
+    winner: checkedWinnerData.result
   })
 }
 
@@ -58,17 +72,21 @@ const registerTimer = (socket, data) => {
     data.time--
     if (data.time < 0) {
       clearTimer(timer)
-      if(io && currentRooms.length > 0){
+      if (io && currentRooms.length > 0) {
         const exactRoom = getExactRoom(data.gameId)
         console.log('exact room', exactRoom.currentTurn)
-        checkAnswer(null, {
-          gameId: data.gameId,
-          player: exactRoom.currentTurn,
-          socketId: getSocketIdFromPlayerId(exactRoom.currentTurn),
-          answer: {
-            isEmpty: true
-          }
-        }, true)
+        checkAnswer(
+          null,
+          {
+            gameId: data.gameId,
+            player: exactRoom.currentTurn,
+            socketId: getSocketIdFromPlayerId(exactRoom.currentTurn),
+            answer: {
+              isEmpty: true
+            }
+          },
+          true
+        )
       }
     }
   }, 1000)
@@ -227,7 +245,7 @@ export default defineEventHandler(({ node }) => {
 
     const startGame = (socket, data) => {
       const exactRoom = getExactRoom(data.gameId)
-      if(exactRoom.playersReady[0]){
+      if (exactRoom.playersReady[0]) {
         exactRoom.playersReady[1] = true
       } else {
         exactRoom.playersReady[0] = true
@@ -275,15 +293,9 @@ export default defineEventHandler(({ node }) => {
 
     const changeTurns = (socket, data) => {
       const exactRoom = getExactRoom(data.gameId)
-      console.log(
-        'change turns',
-        socket.customId,
-        'will change turns',
-        exactRoom.willChangeTurns
-      )
       if (exactRoom.willChangeTurns) {
         io.to(data.gameId).emit('changeTurns', [], () => {
-          if(exactRoom.currentTurn === exactRoom.playerIds[0]){
+          if (exactRoom.currentTurn === exactRoom.playerIds[0]) {
             exactRoom.currentTurn = exactRoom.playerIds[1]
           } else {
             exactRoom.currentTurn = exactRoom.playerIds[0]
