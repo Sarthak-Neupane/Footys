@@ -195,13 +195,13 @@ export default defineEventHandler(({ node }) => {
       socket.on('changeTurns', data => {
         changeTurns(socket, data)
       })
-      socket.on('gameDecided', data => {
-        gameDecided(socket, data)
-      })
       socket.on('leaveRoom', data => {
         leaveRoom(socket, data)
       })
       socket.on('userLeft', data => {
+        const exactRoom = getExactRoom(data.gameId)
+        clearTimer(exactRoom.timer)
+        console.log(`${socket.customId} left room ${data.gameId}`)
         socket.leave(data.gameId)
         socket.to(data.gameId).emit('userLeft', socket.id)
       })
@@ -212,6 +212,7 @@ export default defineEventHandler(({ node }) => {
         for (const room of socket.rooms) {
           if (room !== socket.id) {
             socket.to(room).emit('userLeft', socket.id)
+            leaveRoom(socket, { gameId: room })
           }
         }
       })
@@ -259,37 +260,6 @@ export default defineEventHandler(({ node }) => {
       }
     }
 
-    // const checkAnswer = async (socket, data, isEmpty) => {
-    //   const checkedData = await $fetch(`/api/Game/gameData/${data.gameId}`, {
-    //     method: 'POST',
-    //     body: {
-    //       meta: {
-    //         answer: data.answer,
-    //         player: isEmpty ? data.player : socket.customId,
-    //         gameId: data.gameId,
-    //         socket: isEmpty ? data.socketId : socket.id
-    //       },
-    //       action: isEmpty ? 'emptyCheck' : 'checkAnswer'
-    //     }
-    //   })
-    //   io.to(data.gameId).emit('checkedAnswer', {
-    //     meta: checkedData.meta,
-    //     result: checkedData.result
-    //   })
-    // }
-
-    const gameDecided = (socket, data) => {
-      if (data.winner) {
-        io?.to(data.gameId).emit('gameDecided', {
-          winner: data.winner
-        })
-      } else {
-        io?.to(data.gameId).emit('gameDecided', {
-          winner: null
-        })
-      }
-    }
-
     const changeTurns = (socket, data) => {
       const exactRoom = getExactRoom(data.gameId)
       if (exactRoom.willChangeTurns) {
@@ -311,7 +281,26 @@ export default defineEventHandler(({ node }) => {
     }
 
     const leaveRoom = (socket, data) => {
+      if(!data.gameId) {
+        for (const room of socket.rooms) {
+          if (room !== socket.id) {
+            leaveRoom(socket, { gameId: room })
+          }
+        }
+        return
+      } 
       socket.leave(data.gameId)
+      const exactRoom = getExactRoom(data.gameId)
+      if (exactRoom) {
+        if (exactRoom.player1 === socket.id) {
+          exactRoom.player1 = null
+        } else if (exactRoom.player2 === socket.id) {
+          exactRoom.player2 = null
+        }
+      }
+      if(exactRoom.player1 === null && exactRoom.player2 === null) {
+        currentRooms = currentRooms.filter(r => r.id !== data.gameId)
+      }
       io?.to(socket.id).emit('roomLeft', {
         gameId: data.gameId
       })

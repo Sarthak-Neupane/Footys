@@ -18,21 +18,12 @@
       </base-card>
     </div>
   </Transition>
-  <Transition name="fade"
-    class="fixed top-0 left-0 w-full h-full bg-lightBlack bg-opacity-90 z-50 flex justify-center items-center">
-    <div v-if="searching">
-      <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue" cursor="cursor-default"
-        :groupHover="false" groupName="card" :grounded=false>
-        <div class="flex flex-col justify-center items-center gap-14">
-          <div class="text-3xl font-bold text-center"> {{ matchmakingText }} </div>
-          <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-b-4 border-green"></div>
-          <base-card class="px-8 text-xl" background-back="lightWhite" background-front="green" :groupHover="true"
-            groupName="group" :grounded=false @click="cancelSearch()" v-if="!gameFound"> CANCEL
-          </base-card>
-        </div>
-      </base-card>
-    </div>
-  </Transition>
+  <!-- <Transition name="fade">
+    <Teleport to="body" v-if="searching">
+      <PlayAgain @cancel-join="cancelSearch" :action="action">
+      </PlayAgain>
+    </Teleport>
+  </Transition> -->
   <Transition name="fade">
     <div v-if="gameNotStarted" class="fixed top-0 left-0 w-full h-screen bg-green z-50 flex justify-center items-center">
       <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue" cursor="cursor-default"
@@ -42,7 +33,7 @@
         </div>
       </base-card>
     </div>
-    <div class="min-h-screen bg-lightWhite" v-else>
+    <div class="min-h-screen bg-lightWhite" ref="page" v-else>
       <Transition name="earlyFade">
         <div class=" w-1/2 absolute z-10 top-5 left-1/2 -translate-y-0 -translate-x-1/2">
           <base-card v-if="opponentLeft" class="" background-back="lightWhite"
@@ -62,8 +53,6 @@
         class="container md:py-5 sm:w-3/4 md:w-4/5 lg:w-4/6 my-0 mx-auto h-full flex flex-col justify-start items-center">
         <div class="w-full px-6 flex flex-col md:flex-row justify-center items-center gap-7 md:gap-12">
           <div class="w-full flex flex-col justify-center items-center gap-8 md:gap-12">
-            <!-- <Grid :currentAnswer="currentAnswer" :gameEnd="gameEnd" :resetGrid="resetGrid"
-              @player-guess="sendGuessToStore" @game-ended="gameEnded"></Grid> -->
             <tryGrid ref="grid"></tryGrid>
             <transition name="fade" mode="out-in" appear>
               <div class="relative w-full md:w-full flex justify-center items-center" v-if="!getGameEnd">
@@ -79,34 +68,10 @@
             </transition>
           </div>
           <div class="w-full h-full flex flex-col justify-between items-center gap-7 md:gap-10 lg:gap-14">
-            <Transition name="fade">
-              <div class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full" v-if="!getGameEnd">
-                <Transition name="earlyFade" mode="out-in">
-                  <div class="w-full flex justify-center items-center gap-10" v-if="getMyTurn">
-                    <base-card background-back="lightWhite" :background-front="mainStore.getMyColor"
-                      cursor="cursor-default" :group-hover=false group-name="card" :grounded=false> YOUR PLAY </base-card>
-                  </div>
-
-                  <div class="w-full flex justify-center items-center gap-10" v-else>
-                    <base-card background-back="lightWhite" :background-front="mainStore.getOpponentColor"
-                      cursor="cursor-default" :group-hover=false group-name="card" :grounded=false> OPPONENT PLAY
-                    </base-card>
-                  </div>
-                </Transition>
-                <div class="relative h-20 w-20 flex justify-center items-center">
-                  <Timer />
-                </div>
-              </div>
-              <div class="result" v-else>
-                <h1 class="font-black text-center text-4xl lg:text-6xl" v-if="getGameResult != 'draw'">
-                  <span :class="returnClass"> YOU </span><span :class="returnClass">{{ isWinner ? 'WIN' :
-                    'LOSE'
-                  }}</span>
-                </h1>
-                <h1 class="font-black text-center text-4xl lg:text-6xl" v-else>
-                  <span class="text-lightBlack"> Oops! YOU DREW </span>
-                </h1>
-              </div>
+            <Transition name="fade" mode="out-in">
+              <TurnInfo v-if="!getGameEnd" :get-my-turn="getMyTurn"
+                class="flex flex-col justify-center items-center gap-5 md:gap-8 lg:gap-12 w-full"></TurnInfo>
+              <GameResult v-else></GameResult>
             </Transition>
             <div class="w-full sm:w-3/4 flex justify-between items-center">
               <PlayerGuesses />
@@ -180,22 +145,13 @@ const playerWantingToLeave = ref(false)
 const playerDecidedToLeave = ref(null)
 
 // get the state from store
-const { getGameEnd, getWinner, getGameResult } = storeToRefs(store)
+const { getGameEnd } = storeToRefs(store)
 
 // instantiate a null player
 const player = ref(null)
 
 // ref for the confetti canvas
 const canvas = ref(null)
-
-// refs for the new game event
-const matchmakingText = ref('Finding a game...')
-const searching = ref(null)
-const gameFound = ref(false)
-const joiningGameIn = ref(3)
-const timeout = ref(0)
-
-
 // REGISTERING REFS ENDS ---------
 
 
@@ -229,7 +185,6 @@ onBeforeRouteLeave((to, from, next) => {
     if (playerDecidedToLeave.value != null) {
       if (playerDecidedToLeave.value === true) {
         if (!store.getGameEnd && !opponentLeft.value && store.getGameId != null) {
-          // $socket.emit('userLeft', { id: player.value, gameId: store.getGameId })
           next()
         }
       } else {
@@ -242,12 +197,9 @@ onBeforeRouteLeave((to, from, next) => {
     next()
   }
 })
-
-
 // LIFECYCLE HOOKS ENDS -----------------------------------------
 
 // WATCHERS START ------------------------------------------------
-
 watch(playerDecidedToLeave, (current, previous) => {
   if (current === true) {
     if (!store.getGameEnd && !opponentLeft.value && store.getGameId != null) {
@@ -260,30 +212,9 @@ watch(playerDecidedToLeave, (current, previous) => {
 
   }
 })
-
 // WATCHERS END --------------------------------------------------
 
-
-// COMPUTED STARTS -----------------------------------------------
-
-// computed to check if the player is the winner
-const isWinner = computed(() => {
-  return getWinner.value === player.value
-})
-
-// computed to return the player color class name
-const returnClass = computed(() => {
-  if (isWinner) {
-    return `text-${mainStore.getMyColor.value}`
-  } else {
-    return 'text-lightBlack'
-  }
-})
-
-// COMPUTED ENDS -------------------------------------------------
-
 // METHODS STARTS -------------------------------------------------
-
 // method to go to home page
 const clickLogo = () => {
   $router.push('/')
@@ -291,7 +222,6 @@ const clickLogo = () => {
 
 const leaveGame = () => {
   playerDecidedToLeave.value = true
-  // playerWantingToLeave.value = false
 }
 
 const dontLeaveGame = () => {
@@ -328,12 +258,10 @@ const socketEvents = () => {
       mainStore.setMyTurn(true)
       mainStore.setMyColor(e.color1)
       mainStore.setOpponentColor(e.color2)
-      console.log(getMyTurn.value)
     } else {
       mainStore.setMyTurn(false)
       mainStore.setMyColor(e.color2)
       mainStore.setOpponentColor(e.color1)
-      console.log(getMyTurn.value)
     }
   })
 
@@ -344,6 +272,7 @@ const socketEvents = () => {
       if (player.value === data.details.meta.player) {
         store.setGameEnd()
         store.setGameResult('win', data.details.meta.player)
+        $confetti.addConfetti()
       } else {
         store.setGameEnd()
         store.setGameResult('lose', data.details.meta.player)
@@ -364,15 +293,6 @@ const socketEvents = () => {
   // FOR PLAY AGAIN SOCKET EVENTS ----------------------
 
   // Check if the player has left the current room
-  $socket.on('roomLeft', (e) => {
-    gameFound.value = false
-    const delayTime = setTimeout(() => {
-      $socket.emit('joinLobby', { id: mainStore.getMyId })    // join the lobby after exiting the room
-    }, 1000)
-    timeout.value = delayTime
-  })
-
-
   $socket.on('userLeft', () => {
     if (!store.getGameEnd) {
       opponentLeft.value = true
@@ -381,10 +301,8 @@ const socketEvents = () => {
       $confetti.addConfetti()
     }
   })
-  // PLAY AGAIN SOCKET EVENTS END ---------------------------------
 }
 // SOCKET EVENTS ENDS ------------------------------------------
-
 // REGISTER THE SOCKET EVENT
 if ($socket && $socket.connected) {
   console.log('connected')
@@ -428,4 +346,5 @@ if ($socket && $socket.connected) {
 .earlyFade-leave-to {
   opacity: 0;
   transform: translateY(-20px);
-}</style>
+}
+</style>

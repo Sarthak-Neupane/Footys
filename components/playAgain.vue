@@ -3,12 +3,10 @@
         <base-card class="py-7 px-20 aspect-video 2xl:w-2/5 2xl:h-2/5" background-back="lightWhite" background-front="blue"
             cursor="cursor-default" :groupHover="false" groupName="card" :grounded=false>
             <div class="flex flex-col justify-center items-center gap-14 2xl:w-full 2xl:h-full 2xl:justify-between">
-                <Transition mode="out-in">
                     <div class="text-2xl font-bold text-center 2xl:text-5xl"> {{ matchmakingText }} </div>
-                </Transition>
                 <div class="animate-spin rounded-full h-24 w-24 border-t-8 border-b-8 border-l-8 border-r-2 border-green">
                 </div>
-                <base-card class="px-6 text-xl" @click="cancelSearch" background-back="lightWhite" background-front="green"
+                <base-card class="px-6 text-xl" @click="cancelSearch" v-if="!gameFound" background-back="lightWhite" background-front="green"
                     :groupHover="true" groupName="group" :grounded=false> CANCEL
                 </base-card>
             </div>
@@ -24,7 +22,7 @@ import { useGridStore } from '~~/store/gridStore';
 import { useRoute, useRouter } from 'vue-router';
 
 const props = defineProps(['action'])
-const emits = defineEmits(['cancel-join'])
+const emits = defineEmits(['cancel-join', 'user-left'])
 
 const $router = useRouter()
 const $route = useRoute()
@@ -39,6 +37,7 @@ const matchmakingText = ref('FINDING A GAME')
 const gameFound = ref(null)
 const joiningGameIn = ref(3)
 const timeout = ref(0)
+const interval = ref(0)
 
 const findAGame = () => {
     gameFound.value = false;
@@ -76,7 +75,7 @@ $socket.on('gameJoined', (data) => {
 $socket.on('bothPlayersJoined', (data) => {
     if (data.isJoined) {
         console.log(data)
-        const interval = setInterval(() => {
+        interval.value = setInterval(() => {
             if (joiningGameIn.value > 0) {
                 matchmakingText.value = `Joining in ${joiningGameIn.value}...`
                 joiningGameIn.value -= 1
@@ -96,8 +95,17 @@ $socket.on('bothPlayersJoined', (data) => {
     }
 })
 
+$socket.on('userLeft', (data) => {
+    if (data !== mainStore.getMySocketId) {
+        clearTimeout(timeout.value)
+        clearInterval(interval.value)
+        emits('cancel-join')
+        emits('user-left')
+        $socket.emit('leaveRoom', { id: mainStore.getMyId })
+    }
+})
+
 watch(props, (newProps) => {
-    console.log('new props', newProps)
     if (newProps.action) {
         findAGame()
     }
@@ -107,17 +115,3 @@ watch(props, (newProps) => {
 })
 
 </script>
-
-
-<style scoped>
-/* we will explain what these classes do next! */
-.v-enter-active,
-.v-leave-active {
-    transition: opacity 0.5s ease;
-}
-
-.v-enter-from,
-.v-leave-to {
-    opacity: 0;
-}
-</style>

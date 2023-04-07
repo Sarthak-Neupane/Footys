@@ -1,7 +1,7 @@
 <template>
   <ClientOnly>
-    <base-error background-front="blue" v-if="socketError.value">
-      You are already connected in other tab
+    <base-error background-front="blue" v-if="error.value">
+      {{ error.message }}
   </base-error>
 </ClientOnly>
   <div class="h-screen grid content-center bg-green">
@@ -17,7 +17,7 @@
       </div>
     </div>
     <Teleport to="body" v-if="searching">
-      <PlayAgain @cancel-join="cancelSearch" :action="action">
+      <PlayAgain @cancel-join="cancelSearch" @user-left="userLeft" :action="action">
       </PlayAgain>
     </Teleport>
   </div>
@@ -26,8 +26,6 @@
 <script setup>
 import { useMainStore } from '~~/store/mainStore';
 import { v4 as uuidv4 } from 'uuid';
-
-
 
 // state management and router
 const mainStore = useMainStore();
@@ -39,8 +37,8 @@ const { $socket } = useNuxtApp()
 const searching = ref(null)
 const action = ref(false)
 
-// refs for socket errors
-const socketError = reactive({
+
+const error = reactive({
   value: false,
   message: ''
 })
@@ -55,7 +53,7 @@ onBeforeMount(async () => {
 
 // join the lobby for matchmaking
 const findAGame = () => {
-  if(socketError.value) return
+  if(error.value) return
   searching.value = true;
   action.value = true;
 }
@@ -63,6 +61,12 @@ const findAGame = () => {
 // leave the lobby to cancel matchmaking
 const cancelSearch = () => {
   searching.value = false;
+}
+
+const userLeft = () => {
+  searching.value = false;
+  error.value = true
+  error.message = 'The other player left the room'
 }
 
 // SOCKET EVENTS STARTS
@@ -77,8 +81,8 @@ if ($socket) {
   if($socket.connected) {
     socketEvents()
   } else {
-    socketError.value = true
-    socketError.message = $socket.customError
+    error.value = true
+    error.message = $socket.customError
   }
 } else {
   // console.log('not instantiated')
