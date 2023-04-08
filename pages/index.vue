@@ -73,8 +73,11 @@ const cancelSearch = () => {
 
 const userLeft = () => {
   searching.value = false;
+  action.value = false;
   error.value = true
   error.message = 'The other player left the room'
+  overlay.value.classList.remove('h-full')
+  overlay.value.classList.add('h-0')
   setTimeout(() => {
     error.value = false
     error.message = ''

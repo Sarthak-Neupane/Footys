@@ -80,7 +80,7 @@ const cancelSearch = (val) => {
         console.log(data)
         console.log('left lobby')
     })
-    if(!val){
+    if(val){
         emits('cancel-join')
     } else {
         emits('user-left')

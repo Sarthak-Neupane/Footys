@@ -34,10 +34,10 @@
     <div class="min-h-screen bg-lightWhite relative" ref="page" v-else>
       <Transition name="earlyFade">
         <div class=" w-1/2 absolute z-10 top-5 left-1/2 -translate-y-0 -translate-x-1/2">
-          <base-card v-if="opponentLeft" class="" background-back="lightWhite"
+          <base-card v-if="opponentLeft || error.value" class="" background-back="lightWhite"
             :background-front="mainStore.getOpponentColor" cursor="cursor-default" :group-hover=false group-name="card"
             :grounded=false>
-            Opponent Left The Game </base-card>
+            {{ error.message }} </base-card>
         </div>
       </Transition>
       <canvas class="h-screen w-screen max-h-screen max-w-full absolute bottom-0 left-0 pointer-events-none"
@@ -61,7 +61,7 @@
                 </Transition>
               </div>
               <div class="w-full flex flex-col justify-center items-center gap-5" v-else>
-                <action-buttons @new-game="findAGame()"></action-buttons>
+                <action-buttons :error="error.value" @new-game="findAGame()"></action-buttons>
               </div>
             </transition>
           </div>
@@ -95,7 +95,7 @@ import { useTimerStore } from '~~/store/timerStore'
 const searching = ref(false)
 const action = ref(false)
 const overlay = ref(false)
-const error = ref(false)
+const error = reactive({ value: false, message: '' })
 
 // register refs for the waiting
 const gameNotStarted = ref(true)
@@ -110,12 +110,12 @@ const { getMyTurn } = storeToRefs(mainStore)
 
 const gridStore = useGridStore()
 
-const resetAllStore = () => {
-  store.reset()
-  mainStore.reset()
-  gridStore.reset()
-  useTimerStore().reset()
-}
+// const resetAllStore = () => {
+//   store.reset()
+//   mainStore.reset()
+//   gridStore.reset()
+//   useTimerStore().reset()
+// }
 
 const $router = useRouter()
 const $route = useRoute()
@@ -341,10 +341,15 @@ const socketEvents = () => {
   // Check if the player has left the current room
   $socket.on('playerLeft', () => {
     if (!opponentLeft.value) {
+      error.value = true
+      error.message = 'Oops, your opponent left the game'
       opponentLeft.value = true
       store.setGameEnd()   // end the game
       store.setGameResult('win', player.value)
       $confetti.addConfetti()
+      setTimeout(() => {
+        error.value = false
+      }, 2000)
     }
   })
 }
@@ -352,7 +357,7 @@ const socketEvents = () => {
 // join the lobby for matchmaking
 const findAGame = () => {
   if (error.value) return
-  // resetAllStore()
+  opponentLeft.value = false
   searching.value = true;
   action.value = true;
   overlay.value.classList.remove('h-0')
@@ -368,12 +373,19 @@ const cancelSearch = () => {
 }
 
 const userLeft = () => {
-  searching.value = false;
+  console.log('AJJJJJJAJJAAJJAJAJAJA')
   error.value = true
-  error.message = 'The other player left the room'
+  if(searching.value) {
+    error.message = 'Oops, your opponent left the room. Try again'
+    searching.value = false;
+    action.value = false;
+    overlay.value.classList.remove('h-full')
+    overlay.value.classList.add('h-0')
+  } else {
+    error.message = 'The other player left the room'
+  }
   setTimeout(() => {
     error.value = false
-    error.message = ''
   }, 3000)
 }
 // SOCKET EVENTS ENDS ------------------------------------------
