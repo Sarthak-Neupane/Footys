@@ -44,8 +44,6 @@ export const useGridStore = defineStore('grid', () => {
   })
 
   const reset = () => {
-    columnClubs.value = []
-    rowClubs.value = []
     allAnswers.value = []
     currentAnswer.value = null
     playerIndexes.value = []

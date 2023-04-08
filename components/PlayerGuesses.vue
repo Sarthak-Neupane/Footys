@@ -2,14 +2,14 @@
   <div class="w-1/2 border-solid border-r-[0px] border-lightBlack">
     <TransitionGroup name="list" tag="ul" class="w-full flex flex-col justify-start items-start"
       @before-enter="onBeforeEnter">
-      <li v-for="guess in localPlayerGuessList" :key="guess.meta.answer.isEmpty ? 'NoKeyP' : guess.meta.answer._id" class="guess" :class="returnPlayerClass(guess.result)"> {{ !guess.meta.answer.isEmpty ? guess.meta.answer.name : 'N/A'  }} </li>
+      <li v-for="guess in localPlayerGuessList" :key="guess?.meta.answer.isEmpty ? 'NoKeyP' : guess?.meta.answer._id" class="guess" :class="returnPlayerClass(guess?.result)"> {{ !guess?.meta.answer.isEmpty ? guess?.meta.answer.name : 'N/A'  }} </li>
     </TransitionGroup>
   </div>
 
   <div class=" w-1/2">
     <TransitionGroup name="list" tag="ul" class="w-full flex flex-col justify-start items-start text-right"
       @before-enter="onBeforeEnter">
-      <li v-for="guess in localOpponentGuessList" :key="guess.meta.answer.isEmpty ? 'NoKeyO' : guess.meta.answer._id" class="guess" :class="returnOpponentClass(guess.result)"> {{ !guess.meta.answer.isEmpty ? guess.meta.answer.name : 'N/A' }} </li>
+      <li v-for="guess in localOpponentGuessList" :key="guess?.meta.answer.isEmpty ? 'NoKeyO' : guess?.meta.answer._id" class="guess" :class="returnOpponentClass(guess.result)"> {{ !guess.meta.answer.isEmpty ? guess.meta.answer.name : 'N/A' }} </li>
     </TransitionGroup>
   </div>
 </template>
@@ -26,6 +26,7 @@ const localPlayerGuessList = ref([])
 const localOpponentGuessList = ref([])
 
 gridStore.$subscribe((mut, state)=>{
+  if(!state.currentAnswer) return
   if(state.currentAnswer.meta.player === localStorage.getItem('id')){
     localPlayerGuessList.value.push(state.currentAnswer) 
   } else {

@@ -220,7 +220,6 @@ export default defineEventHandler(({ node }) => {
         for (const room of socket.rooms) {
           if (room !== socket.id) {
             leaveRoom(socket, { gameId: room }, ()=>{})
-            // io.to(room).emit('userLeft', socket.id)
           }
         }
       })
@@ -258,16 +257,12 @@ export default defineEventHandler(({ node }) => {
         player1: exactRoom.player1,
         player2: exactRoom.player2,
         color1: exactRoom.player1Color,
-        color2: exactRoom.player2Color
+        color2: exactRoom.player2Color,
+        playerIds: exactRoom.playerIds,
+        playersReady: exactRoom.playersReady,
+        columnClubs: exactRoom.gameData.columnClubs,
+        rowClubs: exactRoom.gameData.rowClubs,
       })
-      // if (exactRoom.playersReady[0] && exactRoom.playersReady[1]) {
-      //   io?.to(data.gameId).emit('startGame', {
-      //     player1: exactRoom.player1,
-      //     player2: exactRoom.player2,
-      //     color1: exactRoom.player1Color,
-      //     color2: exactRoom.player2Color
-      //   })
-      // }
     }
 
     const changeTurns = (socket, data, callback) => {

@@ -18,12 +18,10 @@
       </base-card>
     </div>
   </Transition>
-  <!-- <Transition name="fade">
-    <Teleport to="body" v-if="searching">
-      <PlayAgain @cancel-join="cancelSearch" :action="action">
-      </PlayAgain>
-    </Teleport>
-  </Transition> -->
+  <Teleport to="body" v-if="searching">
+    <PlayAgain @cancel-join="cancelSearch" @user-left="userLeft" :action="action">
+    </PlayAgain>
+  </Teleport>
   <Transition name="fade">
     <div v-if="gameNotStarted" class="fixed top-0 left-0 w-full h-screen bg-green z-50 flex justify-center items-center">
       <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue" cursor="cursor-default"
@@ -33,7 +31,7 @@
         </div>
       </base-card>
     </div>
-    <div class="min-h-screen bg-lightWhite" ref="page" v-else>
+    <div class="min-h-screen bg-lightWhite relative" ref="page" v-else>
       <Transition name="earlyFade">
         <div class=" w-1/2 absolute z-10 top-5 left-1/2 -translate-y-0 -translate-x-1/2">
           <base-card v-if="opponentLeft" class="" background-back="lightWhite"
@@ -63,7 +61,7 @@
                 </Transition>
               </div>
               <div class="w-full flex flex-col justify-center items-center gap-5" v-else>
-                <action-buttons @new-game="startNewGame()"></action-buttons>
+                <action-buttons @new-game="findAGame()"></action-buttons>
               </div>
             </transition>
           </div>
@@ -79,6 +77,7 @@
           </div>
         </div>
       </div>
+      <div class="absolute bottom-0 left-0 w-full h-0 bg-lightBlack opacity-75" ref="overlay"></div>
     </div>
   </Transition>
 </template>
@@ -92,6 +91,11 @@ import { v4 as uuidv4 } from 'uuid'
 import { useRouter, useRoute } from 'vue-router';
 import { useTimerStore } from '~~/store/timerStore'
 
+// refs for play again
+const searching = ref(false)
+const action = ref(false)
+const overlay = ref(false)
+const error = ref(false)
 
 // register refs for the waiting
 const gameNotStarted = ref(true)
@@ -114,6 +118,7 @@ const resetAllStore = () => {
 }
 
 const $router = useRouter()
+const $route = useRoute()
 
 
 // register plugins
@@ -134,6 +139,10 @@ definePageMeta({
     if (useGameStore().getGameId == null || useGameStore().getGameId == undefined || route.params.gameId != useGameStore().getGameId) {
       return false
     } else {
+      useGameStore().reset()
+      useGridStore().reset()
+      useMainStore().reset()
+      useTimerStore().reset()
       return true
     }
   },
@@ -162,6 +171,7 @@ const canvas = ref(null)
 // Lifecycle Hooks ----------------------------------------------
 // set the player id before the component is mounted
 onBeforeMount(async () => {
+  console.log($route.params.gameId)
   const interval = setInterval(() => {
     if (gameStartsIn.value > 0) {
       gameStartsIn.value--
@@ -179,7 +189,13 @@ onBeforeMount(async () => {
     player.value = uuidv4()
     localStorage.setItem('id', player.value)
   }
-  $socket.emit('ready', { id: player.value, gameId: store.getGameId }, (data)=>{
+  $socket.emit('ready', { id: player.value, gameId: $route.params.gameId }, (data) => {
+
+    store.setGameId($route.params.gameId)
+    // set the gameData to store
+    gridStore.setColumnClubs(data.columnClubs)
+    gridStore.setRowClubs(data.rowClubs)
+
     if (data.player1 === $socket.id) {
       mainStore.setMyTurn(true)
       mainStore.setMyColor(data.color1)
@@ -191,7 +207,6 @@ onBeforeMount(async () => {
     }
   })
 })
-
 
 onBeforeRouteLeave((to, from, next) => {
   if (!store.getGameEnd && !opponentLeft.value && store.getGameId != null) {
@@ -216,9 +231,9 @@ onBeforeRouteLeave((to, from, next) => {
   }
 })
 
-onUnmounted(() => {
-  resetAllStore()
-})
+// onUnmounted(() => {
+//   resetAllStore()
+// })
 
 // LIFECYCLE HOOKS ENDS -----------------------------------------
 
@@ -227,7 +242,7 @@ watch(playerDecidedToLeave, (current, previous) => {
   if (current === true) {
     if (!store.getGameEnd && !opponentLeft.value && store.getGameId != null) {
       // console.log('emitting user left and pushing to home')
-      $socket.emit('userLeft', { id: player.value, gameId: store.getGameId }, (data)=>{
+      $socket.emit('userLeft', { id: player.value, gameId: store.getGameId }, (data) => {
         console.log(data)
         console.log('user left')
       })
@@ -270,11 +285,12 @@ const sendGuessToEmit = async (e) => {
 }
 
 gridStore.$subscribe((mut, state) => {
-  console.log('grid store changed', store.getGameEnd)
+  if(!gridStore.currentAnswer) return
   if (store.getGameEnd) return
-  $socket.emit('changeTurns', { gameId: store.getGameId }, (data)=>{
+  console.log('grid store changed', store.getGameEnd)
+  $socket.emit('changeTurns', { gameId: store.getGameId }, (data) => {
     console.log('changed turns', data)
-    if(player.value === data.currentTurn){
+    if (player.value === data.currentTurn) {
       mainStore.setMyTurn(true)
     } else {
       mainStore.setMyTurn(false)
@@ -289,20 +305,6 @@ const socketEvents = () => {
   $socket.on('timer', (e) => {
     useTimerStore().setTimer(e.time)
   })
-
-  // decide who goes first, and also set who gets which color
-  // $socket.on('startGame', (e) => {
-  //   console.log('start game')
-  //   if (e.player1 === $socket.id) {
-  //     mainStore.setMyTurn(true)
-  //     mainStore.setMyColor(e.color1)
-  //     mainStore.setOpponentColor(e.color2)
-  //   } else {
-  //     mainStore.setMyTurn(false)
-  //     mainStore.setMyColor(e.color2)
-  //     mainStore.setOpponentColor(e.color1)
-  //   }
-  // })
 
   // send the current answer to the grid component is the server emits a 'guess' event
   $socket.on('checkedAnswer', (data) => {
@@ -326,27 +328,53 @@ const socketEvents = () => {
   // change the current turn if the server emits a 'changeTurn' event
   $socket.on('changeTurns', (e, fn) => {
     console.log('change turns', e)
-    if(player.value === e.currentTurn){
+    if (player.value === e.currentTurn) {
       mainStore.setMyTurn(true)
     } else {
       mainStore.setMyTurn(false)
     }
     fn()
-    // mainStore.changeTurns()
-    // fn()
   })
 
   // FOR PLAY AGAIN SOCKET EVENTS ----------------------
 
   // Check if the player has left the current room
   $socket.on('playerLeft', () => {
-    if (!store.getGameEnd) {
+    if (!opponentLeft.value) {
       opponentLeft.value = true
       store.setGameEnd()   // end the game
       store.setGameResult('win', player.value)
       $confetti.addConfetti()
     }
   })
+}
+
+// join the lobby for matchmaking
+const findAGame = () => {
+  if (error.value) return
+  // resetAllStore()
+  searching.value = true;
+  action.value = true;
+  overlay.value.classList.remove('h-0')
+  overlay.value.classList.add('h-full')
+}
+
+
+const cancelSearch = () => {
+  searching.value = false;
+  action.value = false;
+  overlay.value.classList.remove('h-full')
+  overlay.value.classList.add('h-0')
+}
+
+const userLeft = () => {
+  searching.value = false;
+  error.value = true
+  error.message = 'The other player left the room'
+  setTimeout(() => {
+    error.value = false
+    error.message = ''
+  }, 3000)
 }
 // SOCKET EVENTS ENDS ------------------------------------------
 // REGISTER THE SOCKET EVENT
