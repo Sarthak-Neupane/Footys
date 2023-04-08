@@ -4,7 +4,7 @@
       {{ error.message }}
   </base-error>
 </ClientOnly>
-  <div class="h-screen grid content-center bg-green">
+  <div class="h-screen grid content-center bg-green relative">
     <div class="container flex flex-col justify-center items-center gap-20 mx-auto">
       <logo-name class="font-black text-6xl xl:text-8xl" foe-color="blue"></logo-name>
       <div class="flex flex-col justify-center items-center gap-12 text-center text-3xl">
@@ -20,12 +20,15 @@
       <PlayAgain @cancel-join="cancelSearch" @user-left="userLeft" :action="action">
       </PlayAgain>
     </Teleport>
+    <div class="absolute bottom-0 left-0 w-full h-0 bg-lightBlack opacity-75" ref="overlay"></div>
   </div>
 </template>
 
 <script setup>
 import { useMainStore } from '~~/store/mainStore';
 import { v4 as uuidv4 } from 'uuid';
+
+const overlay = ref(null)
 
 // state management and router
 const mainStore = useMainStore();
@@ -34,7 +37,7 @@ const mainStore = useMainStore();
 const { $socket } = useNuxtApp()
 
 // refs for matchmaking
-const searching = ref(null)
+const searching = ref(false)
 const action = ref(false)
 
 
@@ -56,17 +59,26 @@ const findAGame = () => {
   if(error.value) return
   searching.value = true;
   action.value = true;
+  overlay.value.classList.remove('h-0')
+  overlay.value.classList.add('h-full')
 }
 
 // leave the lobby to cancel matchmaking
 const cancelSearch = () => {
   searching.value = false;
+  action.value = false;
+  overlay.value.classList.remove('h-full')
+  overlay.value.classList.add('h-0')
 }
 
 const userLeft = () => {
   searching.value = false;
   error.value = true
   error.message = 'The other player left the room'
+  setTimeout(() => {
+    error.value = false
+    error.message = ''
+  }, 3000)
 }
 
 // SOCKET EVENTS STARTS
@@ -80,6 +92,8 @@ const socketEvents = () => {
 if ($socket) {
   if($socket.connected) {
     socketEvents()
+    error.value = false
+    error.message = ''
   } else {
     error.value = true
     error.message = $socket.customError

@@ -185,15 +185,19 @@ onBeforeRouteLeave((to, from, next) => {
     if (playerDecidedToLeave.value != null) {
       if (playerDecidedToLeave.value === true) {
         if (!store.getGameEnd && !opponentLeft.value && store.getGameId != null) {
+          console.log('emitting user left')
           next()
         }
       } else {
+        console.log('not leaving')
         next(false)
       }
     } else {
+      console.log('not leaving second')
       next(false)
     }
   } else {
+    console.log('Ok leaving')
     next()
   }
 })
@@ -203,13 +207,15 @@ onBeforeRouteLeave((to, from, next) => {
 watch(playerDecidedToLeave, (current, previous) => {
   if (current === true) {
     if (!store.getGameEnd && !opponentLeft.value && store.getGameId != null) {
+      console.log('emitting user left and pushing to home')
       $socket.emit('userLeft', { id: player.value, gameId: store.getGameId })
       $router.push('/')
     } else {
+      console.log('pushing to home')
       $router.push('/')
     }
   } else {
-
+    console.log('not leaving')
   }
 })
 // WATCHERS END --------------------------------------------------
@@ -293,7 +299,7 @@ const socketEvents = () => {
   // FOR PLAY AGAIN SOCKET EVENTS ----------------------
 
   // Check if the player has left the current room
-  $socket.on('userLeft', () => {
+  $socket.on('playerLeft', () => {
     if (!store.getGameEnd) {
       opponentLeft.value = true
       store.setGameEnd()   // end the game

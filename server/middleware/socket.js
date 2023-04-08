@@ -125,9 +125,9 @@ export default defineEventHandler(({ node }) => {
         const gameRoomId = uuidv4()
         const gameRoom = gameRoomId.replace(/-/g, '')
 
-        io?.to('lobby').emit('gameFound', {
+        io?.to(numClients[0]).to(numClients[1]).emit('gameFound', {
           gameId: gameRoom,
-          players: numClients
+          players: [numClients[0], numClients[1]]
         })
       } else {
         // console.log('no game found')
@@ -158,17 +158,21 @@ export default defineEventHandler(({ node }) => {
       })
       console.log('connected sockets', connectedIds)
 
-      socket.on('joinLobby', data => {
-        joinLobby(socket, data)
+      socket.on('joinLobby', (data, callback) => {
+        socket.join('lobby')
+        callback({
+          message: 'joined lobby',
+          playerSocketId: socket.id
+        })
       })
-      socket.on('leaveLobby', data => {
-        leaveLobby(socket)
+      socket.on('leaveLobby', (data, callback) => {
+        leaveLobby(socket, data, callback)
       })
       socket.on('findGame', data => {
         findGame()
       })
-      socket.on('joinGame', data => {
-        joinGame(socket, data)
+      socket.on('joinGame', (data, callback) => {
+        joinGame(socket, data, callback)
       })
       socket.on('ready', data => {
         startGame(socket, data)
@@ -198,21 +202,25 @@ export default defineEventHandler(({ node }) => {
       socket.on('leaveRoom', data => {
         leaveRoom(socket, data)
       })
-      socket.on('userLeft', data => {
-        const exactRoom = getExactRoom(data.gameId)
-        clearTimer(exactRoom.timer)
-        console.log(`${socket.customId} left room ${data.gameId}`)
-        socket.leave(data.gameId)
-        socket.to(data.gameId).emit('userLeft', socket.id)
+      socket.on('leaveRoomForce', data => {
+        for(const room of socket.rooms) {
+          if(room !== socket.id) {
+            leaveRoom(socket, { gameId: room })
+          }
+        }
       })
+      socket.on('userLeft', data => {
+        leaveRoom(socket, data)
+      })
+
       socket.on('disconnecting', reason => {
         console.log(`${socket.customId} disconnecting`)
         connectedSockets = connectedSockets.filter(s => s !== socket.customId)
         connectedIds = connectedIds.filter(s => s.id !== socket.customId)
         for (const room of socket.rooms) {
           if (room !== socket.id) {
-            socket.to(room).emit('userLeft', socket.id)
             leaveRoom(socket, { gameId: room })
+            // io.to(room).emit('userLeft', socket.id)
           }
         }
       })
@@ -221,24 +229,19 @@ export default defineEventHandler(({ node }) => {
       })
     })
 
-    const joinLobby = (socket, data) => {
-      socket.join('lobby')
-      io?.to(socket.id).emit('lobbyJoined', {
-        id: data.id,
-        playerSocketId: socket.id
-      })
-      findGame()
-    }
-
-    const leaveLobby = socket => {
+    const leaveLobby = (socket, data, callback) => {
       socket.leave('lobby')
-      io?.to(socket.id).emit('lobbyLeft')
+      callback({
+        message: 'left lobby'
+      })
+      console.log(socket.id, 'left lobby')
     }
 
-    const joinGame = (socket, data) => {
-      leaveLobby(socket)
+    const joinGame = (socket, data, callback) => {
+      leaveLobby(socket, data, () => {})
       socket.join(data.gameId)
-      io?.to(data.gameId).emit('gameJoined', {
+      callback({
+        message: 'joined game',
         gameId: data.gameId
       })
     }
@@ -281,27 +284,8 @@ export default defineEventHandler(({ node }) => {
     }
 
     const leaveRoom = (socket, data) => {
-      if(!data.gameId) {
-        for (const room of socket.rooms) {
-          if (room !== socket.id) {
-            leaveRoom(socket, { gameId: room })
-          }
-        }
-        return
-      } 
       socket.leave(data.gameId)
-      const exactRoom = getExactRoom(data.gameId)
-      if (exactRoom) {
-        if (exactRoom.player1 === socket.id) {
-          exactRoom.player1 = null
-        } else if (exactRoom.player2 === socket.id) {
-          exactRoom.player2 = null
-        }
-      }
-      if(exactRoom.player1 === null && exactRoom.player2 === null) {
-        currentRooms = currentRooms.filter(r => r.id !== data.gameId)
-      }
-      io?.to(socket.id).emit('roomLeft', {
+      io.to(socket.id).emit('roomLeft', {
         gameId: data.gameId
       })
     }
@@ -364,6 +348,30 @@ export default defineEventHandler(({ node }) => {
               matches: data.matches
             }
           })
+        }
+      }
+    })
+
+    io.of('/').adapter.on('leave-room', (room, id) => {
+      if(room !== 'lobby') {
+        const clients = io?.of('/').adapter.rooms.get(room)
+        // get the number of clients
+        const numClients = [...(clients ? clients : 0)]
+        if(numClients.length === 0) {
+          currentRooms = currentRooms.filter(r => r.id !== room)
+        } else {
+          const exactRoom = getExactRoom(room)
+          if(exactRoom) {
+            clearTimer(exactRoom.timer)
+            if(exactRoom.player1 === id) {
+              exactRoom.player1 = null
+            } else if(exactRoom.player2 === id) {
+              exactRoom.player2 = null
+            }
+            io.to(room).emit('playerLeft')
+          }
+          console.log('player left')
+          console.log(exactRoom)
         }
       }
     })

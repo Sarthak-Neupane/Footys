@@ -21,6 +21,9 @@ import { useGridStore } from '~~/store/gridStore';
 
 import { useRoute, useRouter } from 'vue-router';
 
+const mounted = ref(false)
+
+
 const props = defineProps(['action'])
 const emits = defineEmits(['cancel-join', 'user-left'])
 
@@ -37,13 +40,27 @@ const matchmakingText = ref('FINDING A GAME')
 const gameFound = ref(null)
 const joiningGameIn = ref(3)
 const timeout = ref(0)
-const interval = ref(0)
+const currentInterval = ref(0)
+
+onMounted(() => {
+    mounted.value = true
+    timeout.value = null
+    currentInterval.value = null
+    gameFound.value = false
+    findAGame()
+})
+
 
 const findAGame = () => {
     gameFound.value = false;
     matchmakingText.value = 'FINDING A GAME'
     const delayTime = setTimeout(() => {
-        $socket.emit('joinLobby', { id: mainStore.getMyId })
+        $socket.emit('joinLobby', { id: mainStore.getMyId }, (data) => {
+            console.log(data)
+            console.log('joined lobby')
+            mainStore.setMySocketId(data.playerSocketId)
+            $socket.emit('findGame')
+        })
     }, 1000)
     timeout.value = delayTime
 }
@@ -51,34 +68,42 @@ const findAGame = () => {
 const cancelSearch = () => {
     gameFound.value = false;
     clearTimeout(timeout.value)
-    $socket.emit('leaveLobby', { id: mainStore.getMyId })
+    timeout.value = null
+    $socket.emit('leaveLobby', { id: mainStore.getMyId }, (data)=>{
+        console.log(data)
+        console.log('left lobby')
+    })
     emits('cancel-join')
 }
 
-$socket.on('lobbyJoined', (data) => {
-    console.log('lobby joined')
-    mainStore.setMySocketId(data.playerSocketId)
-})
+// $socket.on('lobbyJoined', (data) => {
+//     console.log('lobby joined')
+//     mainStore.setMySocketId(data.playerSocketId)
+//     $socket.emit('findGame')
+// })
 
 $socket.on('gameFound', (data) => {
     if (data.players.includes(mainStore.getMySocketId)) {
         matchmakingText.value = 'Game Found'
         gameFound.value = true
-        $socket.emit('joinGame', { id: mainStore.getMyId, gameId: data.gameId })
+        $socket.emit('joinGame', { id: mainStore.getMyId, gameId: data.gameId }, (data) => {
+            console.log(data)
+            console.log('joined game')
+        })
     }
 })
 
-$socket.on('gameJoined', (data) => {
-    matchmakingText.value = `Joining game...`
-})
+// $socket.on('gameJoined', (data) => {
+//     matchmakingText.value = `Joining game...`
+// })
 
 $socket.on('bothPlayersJoined', (data) => {
     if (data.isJoined) {
-        console.log(data)
-        interval.value = setInterval(() => {
+        const interval = setInterval(() => {
             if (joiningGameIn.value > 0) {
                 matchmakingText.value = `Joining in ${joiningGameIn.value}...`
                 joiningGameIn.value -= 1
+                currentInterval.value = interval
             } else {
                 clearInterval(interval)
                 joiningGameIn.value = 3
@@ -89,6 +114,7 @@ $socket.on('bothPlayersJoined', (data) => {
                 gridStore.setColumnClubs(data.gameData.columnClubs)
                 gridStore.setRowClubs(data.gameData.rowClubs)
 
+                console.log('both players joined, now pushing to game page')
                 $router.push(`/game/${data.gameId}`)
             }
         }, 1000)
@@ -96,22 +122,28 @@ $socket.on('bothPlayersJoined', (data) => {
 })
 
 $socket.on('userLeft', (data) => {
-    if (data !== mainStore.getMySocketId) {
-        clearTimeout(timeout.value)
-        clearInterval(interval.value)
+    // if (data !== mainStore.getMySocketId) {
+        console.log('user left')
+        clearInterval(currentInterval.value)
         emits('cancel-join')
         emits('user-left')
-        $socket.emit('leaveRoom', { id: mainStore.getMyId })
-    }
+        $socket.emit('leaveRoomForce', { id: mainStore.getMyId })
+    // }
 })
 
-watch(props, (newProps) => {
-    if (newProps.action) {
-        findAGame()
-    }
-}, {
-    deep: true,
-    immediate: true
+// watch(props, (newProps) => {
+//     if (newProps.action) {
+//         findAGame()
+//     }
+// }, {
+//     deep: true,
+//     immediate: true
+// })
+
+onUnmounted(() => {
+    console.log('unmounted')
+    clearInterval(currentInterval.value)
+    mounted.value = false
 })
 
 </script>
