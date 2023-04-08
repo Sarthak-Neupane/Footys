@@ -40,6 +40,13 @@ export const useGameStore = defineStore('game', () => {
     return winner.value
   })
 
+  const reset = () => {
+    gameId.value = null
+    gameEnd.value = false
+    gameResult.value = false
+    winner.value = null
+  }
+
   return {
     setGameId,
     getGameId,
@@ -48,6 +55,7 @@ export const useGameStore = defineStore('game', () => {
     getGameEnd,
     setGameResult,
     getGameResult,
-    getWinner
+    getWinner,
+    reset
   }
 })

@@ -99,16 +99,22 @@ const gameStartsIn = ref(3)
 
 // register game store and router
 const store = useGameStore()
+const { getGameEnd } = storeToRefs(store)
+
 const mainStore = useMainStore()
+const { getMyTurn } = storeToRefs(mainStore)
+
 const gridStore = useGridStore()
+
+const resetAllStore = () => {
+  store.reset()
+  mainStore.reset()
+  gridStore.reset()
+  useTimerStore().reset()
+}
+
 const $router = useRouter()
 
-mainStore.$subscribe(() => {
-  console.log('mainStore changed')
-})
-
-
-const { getMyTurn } = storeToRefs(mainStore)
 
 // register plugins
 const { $confetti } = useNuxtApp()
@@ -144,8 +150,6 @@ const opponentLeft = ref(false)
 const playerWantingToLeave = ref(false)
 const playerDecidedToLeave = ref(null)
 
-// get the state from store
-const { getGameEnd } = storeToRefs(store)
 
 // instantiate a null player
 const player = ref(null)
@@ -163,7 +167,7 @@ onBeforeMount(async () => {
       gameStartsIn.value--
     } else {
       gameNotStarted.value = false
-      $socket.emit('start', { id: player.value, gameId: store.getGameId, playerTurn: getMyTurn.value })
+      $socket.emit('start', { id: player.value, gameId: store.getGameId, playerTurn: mainStore.getMyTurn })
       clearInterval(interval)
     }
   }, 1000)
@@ -175,7 +179,17 @@ onBeforeMount(async () => {
     player.value = uuidv4()
     localStorage.setItem('id', player.value)
   }
-  $socket.emit('ready', { id: player.value, gameId: store.getGameId })
+  $socket.emit('ready', { id: player.value, gameId: store.getGameId }, (data)=>{
+    if (data.player1 === $socket.id) {
+      mainStore.setMyTurn(true)
+      mainStore.setMyColor(data.color1)
+      mainStore.setOpponentColor(data.color2)
+    } else {
+      mainStore.setMyTurn(false)
+      mainStore.setMyColor(data.color2)
+      mainStore.setOpponentColor(data.color1)
+    }
+  })
 })
 
 
@@ -189,33 +203,41 @@ onBeforeRouteLeave((to, from, next) => {
           next()
         }
       } else {
-        console.log('not leaving')
+        // console.log('not leaving')
         next(false)
       }
     } else {
-      console.log('not leaving second')
+      // console.log('not leaving second')
       next(false)
     }
   } else {
-    console.log('Ok leaving')
+    // console.log('Ok leaving')
     next()
   }
 })
+
+onUnmounted(() => {
+  resetAllStore()
+})
+
 // LIFECYCLE HOOKS ENDS -----------------------------------------
 
 // WATCHERS START ------------------------------------------------
 watch(playerDecidedToLeave, (current, previous) => {
   if (current === true) {
     if (!store.getGameEnd && !opponentLeft.value && store.getGameId != null) {
-      console.log('emitting user left and pushing to home')
-      $socket.emit('userLeft', { id: player.value, gameId: store.getGameId })
+      // console.log('emitting user left and pushing to home')
+      $socket.emit('userLeft', { id: player.value, gameId: store.getGameId }, (data)=>{
+        console.log(data)
+        console.log('user left')
+      })
       $router.push('/')
     } else {
-      console.log('pushing to home')
+      // console.log('pushing to home')
       $router.push('/')
     }
   } else {
-    console.log('not leaving')
+    // console.log('not leaving')
   }
 })
 // WATCHERS END --------------------------------------------------
@@ -235,6 +257,8 @@ const dontLeaveGame = () => {
   playerDecidedToLeave.value = false
 }
 
+
+
 // send the guess to server and grid. After the 'submit-answer' event is emitted by the searchBar component
 const sendGuessToEmit = async (e) => {
   if (!getMyTurn.value) return
@@ -246,8 +270,16 @@ const sendGuessToEmit = async (e) => {
 }
 
 gridStore.$subscribe((mut, state) => {
+  console.log('grid store changed', store.getGameEnd)
   if (store.getGameEnd) return
-  $socket.emit('changeTurns', { gameId: store.getGameId })
+  $socket.emit('changeTurns', { gameId: store.getGameId }, (data)=>{
+    console.log('changed turns', data)
+    if(player.value === data.currentTurn){
+      mainStore.setMyTurn(true)
+    } else {
+      mainStore.setMyTurn(false)
+    }
+  })
 })
 
 
@@ -259,17 +291,18 @@ const socketEvents = () => {
   })
 
   // decide who goes first, and also set who gets which color
-  $socket.on('startGame', (e) => {
-    if (e.player1 === $socket.id) {
-      mainStore.setMyTurn(true)
-      mainStore.setMyColor(e.color1)
-      mainStore.setOpponentColor(e.color2)
-    } else {
-      mainStore.setMyTurn(false)
-      mainStore.setMyColor(e.color2)
-      mainStore.setOpponentColor(e.color1)
-    }
-  })
+  // $socket.on('startGame', (e) => {
+  //   console.log('start game')
+  //   if (e.player1 === $socket.id) {
+  //     mainStore.setMyTurn(true)
+  //     mainStore.setMyColor(e.color1)
+  //     mainStore.setOpponentColor(e.color2)
+  //   } else {
+  //     mainStore.setMyTurn(false)
+  //     mainStore.setMyColor(e.color2)
+  //     mainStore.setOpponentColor(e.color1)
+  //   }
+  // })
 
   // send the current answer to the grid component is the server emits a 'guess' event
   $socket.on('checkedAnswer', (data) => {
@@ -292,8 +325,15 @@ const socketEvents = () => {
 
   // change the current turn if the server emits a 'changeTurn' event
   $socket.on('changeTurns', (e, fn) => {
-    mainStore.changeTurns()
+    console.log('change turns', e)
+    if(player.value === e.currentTurn){
+      mainStore.setMyTurn(true)
+    } else {
+      mainStore.setMyTurn(false)
+    }
     fn()
+    // mainStore.changeTurns()
+    // fn()
   })
 
   // FOR PLAY AGAIN SOCKET EVENTS ----------------------

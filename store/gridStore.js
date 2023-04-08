@@ -43,6 +43,15 @@ export const useGridStore = defineStore('grid', () => {
     return playerIndexes.value.length + opponentIndexes.value.length === 9
   })
 
+  const reset = () => {
+    columnClubs.value = []
+    rowClubs.value = []
+    allAnswers.value = []
+    currentAnswer.value = null
+    playerIndexes.value = []
+    opponentIndexes.value = []
+  }
+
   return {
     columnClubs,
     rowClubs,
@@ -55,6 +64,7 @@ export const useGridStore = defineStore('grid', () => {
     setPlayerIndex,
     opponentIndexes,
     setOpponentIndex,
-    getGridFull
+    getGridFull,
+    reset
   }
 })

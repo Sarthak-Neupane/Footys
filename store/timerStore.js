@@ -11,8 +11,13 @@ export const useTimerStore = defineStore('timer', () => {
     return timer.value
   })
 
+  const reset = () => {
+    timer.value = 30
+  }
+
   return {
     setTimer,
-    getTimer
+    getTimer,
+    reset
   }
 })

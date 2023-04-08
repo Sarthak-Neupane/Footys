@@ -174,8 +174,8 @@ export default defineEventHandler(({ node }) => {
       socket.on('joinGame', (data, callback) => {
         joinGame(socket, data, callback)
       })
-      socket.on('ready', data => {
-        startGame(socket, data)
+      socket.on('ready', (data, callback) => {
+        startGame(socket, data, callback)
       })
       socket.on('start', data => {
         const exactRoom = getExactRoom(data.gameId)
@@ -196,8 +196,8 @@ export default defineEventHandler(({ node }) => {
         clearTimer(exactRoom.timer)
         checkAnswer(socket, data, false)
       })
-      socket.on('changeTurns', data => {
-        changeTurns(socket, data)
+      socket.on('changeTurns', (data, callback) => {
+        changeTurns(socket, data, callback)
       })
       socket.on('leaveRoom', data => {
         leaveRoom(socket, data)
@@ -209,8 +209,8 @@ export default defineEventHandler(({ node }) => {
           }
         }
       })
-      socket.on('userLeft', data => {
-        leaveRoom(socket, data)
+      socket.on('userLeft', (data, callback) => {
+        leaveRoom(socket, data, callback)
       })
 
       socket.on('disconnecting', reason => {
@@ -219,7 +219,7 @@ export default defineEventHandler(({ node }) => {
         connectedIds = connectedIds.filter(s => s.id !== socket.customId)
         for (const room of socket.rooms) {
           if (room !== socket.id) {
-            leaveRoom(socket, { gameId: room })
+            leaveRoom(socket, { gameId: room }, ()=>{})
             // io.to(room).emit('userLeft', socket.id)
           }
         }
@@ -246,32 +246,43 @@ export default defineEventHandler(({ node }) => {
       })
     }
 
-    const startGame = (socket, data) => {
+    const startGame = (socket, data, callback) => {
       const exactRoom = getExactRoom(data.gameId)
       if (exactRoom.playersReady[0]) {
         exactRoom.playersReady[1] = true
       } else {
         exactRoom.playersReady[0] = true
       }
-      if (exactRoom.playersReady[0] && exactRoom.playersReady[1]) {
-        io?.to(data.gameId).emit('startGame', {
-          player1: exactRoom.player1,
-          player2: exactRoom.player2,
-          color1: exactRoom.player1Color,
-          color2: exactRoom.player2Color
-        })
-      }
+      callback({
+        message: 'ready',
+        player1: exactRoom.player1,
+        player2: exactRoom.player2,
+        color1: exactRoom.player1Color,
+        color2: exactRoom.player2Color
+      })
+      // if (exactRoom.playersReady[0] && exactRoom.playersReady[1]) {
+      //   io?.to(data.gameId).emit('startGame', {
+      //     player1: exactRoom.player1,
+      //     player2: exactRoom.player2,
+      //     color1: exactRoom.player1Color,
+      //     color2: exactRoom.player2Color
+      //   })
+      // }
     }
 
-    const changeTurns = (socket, data) => {
+    const changeTurns = (socket, data, callback) => {
       const exactRoom = getExactRoom(data.gameId)
+      console.log('change turns', exactRoom)
       if (exactRoom.willChangeTurns) {
-        io.to(data.gameId).emit('changeTurns', [], () => {
-          if (exactRoom.currentTurn === exactRoom.playerIds[0]) {
-            exactRoom.currentTurn = exactRoom.playerIds[1]
-          } else {
-            exactRoom.currentTurn = exactRoom.playerIds[0]
-          }
+        console.log('will change turns')
+        if (exactRoom.currentTurn === exactRoom.playerIds[0]) {
+          exactRoom.currentTurn = exactRoom.playerIds[1]
+        } else {
+          exactRoom.currentTurn = exactRoom.playerIds[0]
+        }
+        io.to(data.gameId).emit('changeTurns', {
+          currentTurn: exactRoom.currentTurn
+        }, () => {
           exactRoom.willChangeTurns = 0
           exactRoom.timer = registerTimer(socket, {
             gameId: data.gameId,
@@ -279,13 +290,15 @@ export default defineEventHandler(({ node }) => {
           })
         })
       } else {
+        console.log('will not change turns, now incrementing')
         exactRoom.willChangeTurns++
       }
     }
 
-    const leaveRoom = (socket, data) => {
+    const leaveRoom = (socket, data, callback) => {
       socket.leave(data.gameId)
-      io.to(socket.id).emit('roomLeft', {
+      callback({
+        message: 'left room',
         gameId: data.gameId
       })
     }

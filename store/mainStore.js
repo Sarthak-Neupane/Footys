@@ -41,6 +41,7 @@ export const useMainStore = defineStore('main', () => {
 
   const setMyTurn = turn => {
     myTurn.value = turn
+    console.log('set my turn to:', myTurn.value)
   }
 
   const getMyTurn = computed(() => {
@@ -49,6 +50,13 @@ export const useMainStore = defineStore('main', () => {
 
   const changeTurns = () => {
     myTurn.value = !myTurn.value
+  }
+
+  const reset = () => {
+    myTurn.value = null
+    myColor.value = null
+    opponentColor.value = null
+    myId.value = localStorage.getItem('id') || null
   }
 
   return {
@@ -62,6 +70,7 @@ export const useMainStore = defineStore('main', () => {
     getOpponentColor,
     setMyTurn,
     getMyTurn,
-    changeTurns
+    changeTurns,
+    reset
   }
 })
