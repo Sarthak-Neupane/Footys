@@ -6,7 +6,7 @@
                 <div class="text-2xl font-bold text-center 2xl:text-5xl"> {{ matchmakingText }} </div>
                 <div class="animate-spin rounded-full h-24 w-24 border-t-8 border-b-8 border-l-8 border-r-2 border-green">
                 </div>
-                <base-card class="px-6 text-xl" @click="cancelSearch" v-if="!gameFound" background-back="lightWhite"
+                <base-card class="px-6 text-xl" @click="cancelSearch(true)" v-if="!gameFound" background-back="lightWhite"
                     background-front="green" :groupHover="true" groupName="group" :grounded=false> CANCEL
                 </base-card>
             </div>
@@ -24,6 +24,7 @@ import { useRoute, useRouter } from 'vue-router';
 
 const mounted = ref(false)
 
+const nowSearching = ref(false)
 
 const props = defineProps(['action'])
 const emits = defineEmits(['cancel-join', 'user-left'])
@@ -48,19 +49,20 @@ onMounted(() => {
     timeout.value = null
     currentInterval.value = null
     gameFound.value = false
-    // gameStore.reset()
-    // mainStore.reset()
-    // gridStore.reset()
-    // useTimerStore().reset()
+    nowSearching.value = false
     findAGame()
 })
 
-
 const findAGame = () => {
+    nowSearching.value = true
     gameFound.value = false;
     matchmakingText.value = 'FINDING A GAME'
     const delayTime = setTimeout(() => {
         $socket.emit('joinLobby', { id: mainStore.getMyId }, (data) => {
+            if(nowSearching.value === false) {
+                cancelSearch(false)
+                return
+            }
             console.log(data)
             console.log('joined lobby')
             mainStore.setMySocketId(data.playerSocketId)
@@ -70,7 +72,7 @@ const findAGame = () => {
     timeout.value = delayTime
 }
 
-const cancelSearch = () => {
+const cancelSearch = (val) => {
     gameFound.value = false;
     clearTimeout(timeout.value)
     timeout.value = null
@@ -78,17 +80,15 @@ const cancelSearch = () => {
         console.log(data)
         console.log('left lobby')
     })
-    emits('cancel-join')
+    if(!val){
+        emits('cancel-join')
+    } else {
+        emits('user-left')
+    }
 }
 
-// $socket.on('lobbyJoined', (data) => {
-//     console.log('lobby joined')
-//     mainStore.setMySocketId(data.playerSocketId)
-//     $socket.emit('findGame')
-// })
-
 $socket.on('gameFound', (data) => {
-    if (data.players.includes(mainStore.getMySocketId)) {
+    if (data.players.includes(mainStore.getMySocketId) && mounted.value && !gameFound.value && nowSearching.value) {
         matchmakingText.value = 'Game Found'
         gameFound.value = true
         $socket.emit('joinGame', { id: mainStore.getMyId, gameId: data.gameId }, (data) => {
@@ -97,10 +97,6 @@ $socket.on('gameFound', (data) => {
         })
     }
 })
-
-// $socket.on('gameJoined', (data) => {
-//     matchmakingText.value = `Joining game...`
-// })
 
 $socket.on('bothPlayersJoined', (data) => {
     if (data.isJoined) {
@@ -113,11 +109,10 @@ $socket.on('bothPlayersJoined', (data) => {
                 clearInterval(interval)
                 joiningGameIn.value = 3
 
-                // useGameStore().reset()
-                // useMainStore().reset()
-                // useGridStore().reset()
-                // useTimerStore().reset()
-
+                if(!nowSearching.value) {
+                    cancelSearch(false)
+                    return
+                }
                 // set the game id to the store.
                 gameStore.setGameId(data.gameId)
                 // set the gameData to store
@@ -130,24 +125,16 @@ $socket.on('bothPlayersJoined', (data) => {
     }
 })
 
-$socket.on('userLeft', (data) => {
-    // if (data !== mainStore.getMySocketId) {
-    console.log('user left')
-    clearInterval(currentInterval.value)
-    emits('cancel-join')
-    emits('user-left')
-    $socket.emit('leaveRoomForce', { id: mainStore.getMyId })
-    // }
+$socket.on('cancelJoin', (data)=>{
+    nowSearching.value = false
 })
 
-// watch(props, (newProps) => {
-//     if (newProps.action) {
-//         findAGame()
-//     }
-// }, {
-//     deep: true,
-//     immediate: true
-// })
+$socket.on('playerLeft', (data) => {
+    console.log('user left')
+    nowSearching.value = false
+    cancelSearch(false)
+    emits('user-left')
+})
 
 onUnmounted(() => {
     console.log('unmounted')
