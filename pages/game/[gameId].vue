@@ -23,13 +23,8 @@
     </PlayAgain>
   </Teleport>
   <Transition name="fade">
-    <div v-if="gameNotStarted" class="fixed top-0 left-0 w-full h-screen bg-green z-50 flex justify-center items-center">
-      <base-card class="py-7 px-20" background-back="lightWhite" background-front="blue" cursor="cursor-default"
-        :groupHover="false" groupName="card" :grounded=false>
-        <div class="flex flex-col justify-center items-center gap-14">
-          <div class="text-3xl font-bold text-center"> Game Starts In {{ gameStartsIn }} </div>
-        </div>
-      </base-card>
+    <div v-if="gameNotStarted" class="fixed top-0 left-0 w-full h-screen">
+      <GameRoomSplash @anim-complete="animComplete"> </GameRoomSplash>
     </div>
     <div class="min-h-screen bg-lightWhite relative" ref="page" v-else>
       <Transition name="earlyFade">
@@ -110,13 +105,6 @@ const { getMyTurn } = storeToRefs(mainStore)
 
 const gridStore = useGridStore()
 
-// const resetAllStore = () => {
-//   store.reset()
-//   mainStore.reset()
-//   gridStore.reset()
-//   useTimerStore().reset()
-// }
-
 const $router = useRouter()
 const $route = useRoute()
 
@@ -168,20 +156,17 @@ const canvas = ref(null)
 // REGISTERING REFS ENDS ---------
 
 
+const animComplete = () => {
+  console.log('animation complete')
+  setTimeout(() => {
+    gameNotStarted.value = false
+    $socket.emit('start', { id: player.value, gameId: store.getGameId, playerTurn: mainStore.getMyTurn })
+  }, 1000)
+}
+
 // Lifecycle Hooks ----------------------------------------------
 // set the player id before the component is mounted
 onBeforeMount(async () => {
-  console.log($route.params.gameId)
-  const interval = setInterval(() => {
-    if (gameStartsIn.value > 0) {
-      gameStartsIn.value--
-    } else {
-      gameNotStarted.value = false
-      $socket.emit('start', { id: player.value, gameId: store.getGameId, playerTurn: mainStore.getMyTurn })
-      clearInterval(interval)
-    }
-  }, 1000)
-
   // check if the player has a local storage id
   if (localStorage.getItem('id')) {
     player.value = localStorage.getItem('id')
