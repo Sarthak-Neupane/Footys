@@ -17,7 +17,7 @@
       </div>
     </div>
     <Teleport to="body" v-if="searching">
-      <PlayAgain @cancel-join="cancelSearch" @user-left="userLeft" :action="action">
+      <PlayAgain @cancel-join="cancelSearch" @user-left="userLeft" :action="action" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-['audiowide']">
       </PlayAgain>
     </Teleport>
     <div class="absolute bottom-0 left-0 w-full h-0 bg-lightBlack opacity-75" ref="overlay"></div>

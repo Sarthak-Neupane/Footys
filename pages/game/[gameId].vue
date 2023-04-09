@@ -27,9 +27,9 @@
       <GameRoomSplash @anim-complete="animComplete"> </GameRoomSplash>
     </div>
     <div class="min-h-screen bg-lightWhite relative" ref="page" v-else>
-      <Transition name="earlyFade">
-        <div class=" w-1/2 absolute z-10 top-5 left-1/2 -translate-y-0 -translate-x-1/2">
-          <base-card v-if="opponentLeft || error.value" class="" background-back="lightWhite"
+      <Transition name="slide-fade">
+        <div class=" w-1/2 fixed z-10 top-5 left-1/2 -translate-x-1/2" v-if="opponentLeft || error.value">
+          <base-card class="" background-back="lightWhite"
             :background-front="mainStore.getOpponentColor" cursor="cursor-default" :group-hover=false group-name="card"
             :grounded=false>
             {{ error.message }} </base-card>
@@ -418,4 +418,18 @@ if ($socket && $socket.connected) {
   opacity: 0;
   transform: translateY(-20px);
 }
+
+.slide-fade-enter-active {
+    transition: all 0.2s ease-out;
+}
+
+.slide-fade-leave-active {
+    transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+    transform: translate(-50%, -100%);
+}
+
 </style>

@@ -1,6 +1,6 @@
 <template>
-    <div class="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 fixed font-['audiowide']">
-        <base-card class="py-7 px-20 aspect-video 2xl:w-2/5 2xl:h-2/5" background-back="lightWhite" background-front="blue"
+    <div class="">
+        <base-card class="py-7 px-20 aspect-video w-full h-full" background-back="lightWhite" background-front="blue"
             cursor="cursor-default" :groupHover="false" groupName="card" :grounded=false>
             <div class="flex flex-col justify-center items-center gap-14 2xl:w-full 2xl:h-full 2xl:justify-between">
                 <div class="text-2xl font-bold text-center 2xl:text-5xl"> {{ matchmakingText }} </div>
