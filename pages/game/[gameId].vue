@@ -157,7 +157,7 @@ const canvas = ref(null)
 
 
 const animComplete = () => {
-  console.log('animation complete')
+  // console.log('animation complete')
   setTimeout(() => {
     gameNotStarted.value = false
     $socket.emit('start', { id: player.value, gameId: store.getGameId, playerTurn: mainStore.getMyTurn })
@@ -181,7 +181,7 @@ onBeforeMount(async () => {
     gridStore.setColumnClubs(data.columnClubs)
     gridStore.setRowClubs(data.rowClubs)
 
-    console.log('data', data)
+    // console.log('data', data)
 
     if (data.player1 === $socket.id) {
       mainStore.setMyTurn(true)
@@ -203,7 +203,7 @@ onBeforeRouteLeave((to, from, next) => {
     if (playerDecidedToLeave.value != null) {
       if (playerDecidedToLeave.value === true) {
         if (!store.getGameEnd && !opponentLeft.value && store.getGameId != null) {
-          console.log('emitting user left')
+          // console.log('emitting user left')
           next()
         }
       } else {
@@ -232,8 +232,8 @@ watch(playerDecidedToLeave, (current, previous) => {
     if (!store.getGameEnd && !opponentLeft.value && store.getGameId != null) {
       // console.log('emitting user left and pushing to home')
       $socket.emit('userLeft', { id: player.value, gameId: store.getGameId }, (data) => {
-        console.log(data)
-        console.log('user left')
+        // console.log(data)
+        // console.log('user left')
       })
       $router.push('/')
     } else {
@@ -276,9 +276,9 @@ const sendGuessToEmit = async (e) => {
 gridStore.$subscribe((mut, state) => {
   if (!gridStore.currentAnswer) return
   if (store.getGameEnd) return
-  console.log('grid store changed', store.getGameEnd)
+  // console.log('grid store changed', store.getGameEnd)
   $socket.emit('changeTurns', { gameId: store.getGameId }, (data) => {
-    console.log('changed turns', data)
+    // console.log('changed turns', data)
     if (player.value === data.currentTurn) {
       mainStore.setMyTurn(true)
     } else {
@@ -316,7 +316,7 @@ const socketEvents = () => {
 
   // change the current turn if the server emits a 'changeTurn' event
   $socket.on('changeTurns', (e, fn) => {
-    console.log('change turns', e)
+    // console.log('change turns', e)
     if (player.value === e.currentTurn) {
       mainStore.setMyTurn(true)
     } else {
@@ -362,7 +362,7 @@ const cancelSearch = () => {
 }
 
 const userLeft = () => {
-  console.log('AJJJJJJAJJAAJJAJAJAJA')
+  // console.log('AJJJJJJAJJAAJJAJAJAJA')
   error.value = true
   if (searching.value) {
     error.message = 'Oops, your opponent left the room. Try again'
@@ -380,10 +380,10 @@ const userLeft = () => {
 // SOCKET EVENTS ENDS ------------------------------------------
 // REGISTER THE SOCKET EVENT
 if ($socket && $socket.connected) {
-  console.log('connected')
+  // console.log('connected')
   socketEvents()
 } else {
-  console.log('not connected')
+  // console.log('not connected')
 }
 
 </script>

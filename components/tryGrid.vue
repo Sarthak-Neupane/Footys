@@ -76,7 +76,7 @@ const emits = defineEmits(['animationComplete'])
 gridStore.$subscribe((mutation, state) => {
     if (state.playerIndexes.length > 0) {
         const recentIndex = state.playerIndexes[state.playerIndexes.length - 1]
-        console.log(occupiedPlayerAnswerIndexes.value)
+        // console.log(occupiedPlayerAnswerIndexes.value)
         if (!occupiedPlayerAnswerIndexes.value.includes(recentIndex)) {
             occupiedPlayerAnswerIndexes.value.push(recentIndex)
             occupiedPlayerGridNumbers.value.push(getTheGridNumberFromAnswerIndex(recentIndex))
@@ -109,9 +109,9 @@ watch(() => occupiedPlayerGridNumbers.value, (newVal, oldVal) => {
 
 watch(() => occupiedOpponentGridNumbers.value, (newVal, oldVal) => {
     newVal.forEach((number) => {
-        console.log('opponent', number)
+        // console.log('opponent', number)
         const element = grid.value.querySelector(`[data-number="${number}"]`)
-        console.log(element)
+        // console.log(element)
         gsapAnimation(element, false)
     })
 }, {
