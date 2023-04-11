@@ -176,10 +176,17 @@ export default defineEventHandler(({ node }) => {
       console.log('connected sockets', connectedIds)
 
       socket.on('setCustomName', (data, callback) => {
-        socket.customName = data.name
+        socket.customName = data
+
+        // change the name in the connectedIds array
+        const index = connectedIds.findIndex(
+          player => player.socketId === socket.id
+        )
+        connectedIds[index].name = data
         callback({
           message: 'name set',
-          name: data.name
+          name: data.name,
+          socket : socket.customName
         })
       })
 

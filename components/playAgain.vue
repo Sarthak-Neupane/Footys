@@ -1,9 +1,9 @@
 <template>
-    <div class="">
+    <div class="w-full sm:w-1/2">
         <base-card class="py-7 px-20 aspect-video w-full h-full" background-back="lightWhite" background-front="blue"
             cursor="cursor-default" :groupHover="false" groupName="card" :grounded=false>
-            <div class="flex flex-col justify-center items-center gap-14 2xl:w-full 2xl:h-full 2xl:justify-between">
-                <div class="text-2xl font-bold text-center 2xl:text-5xl"> {{ matchmakingText }} </div>
+            <div class="flex flex-col justify-center items-center gap-14 w-full 2xl:h-full 2xl:justify-between">
+                <div class="text-2xl font-bold text-center 2xl:text-3xl"> {{ matchmakingText }} </div>
                 <div class="animate-spin rounded-full h-24 w-24 border-t-8 border-b-8 border-l-8 border-r-2 border-green">
                 </div>
                 <base-card class="px-6 text-xl" @click="cancelSearch(true)" v-if="!gameFound" background-back="lightWhite"

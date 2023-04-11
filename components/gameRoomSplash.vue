@@ -6,7 +6,7 @@
                 <span class="text-green">V</span>
                 <span class="text-blue">S</span>
             </h1>
-            <h1 class="py-4 text-right text-3xl text-green font-bold" id="player2">{{ mainStore.getOpponentName }}</h1>
+            <h1 class="py-4 text-right text-3xl text-green font-bold" id="player2">{{ getOpponentName }}</h1>
         </div>
         <div class="absolute top-5 left-1/2 -translate-x-1/2 text-3xl" id="time">
             {{time}}
@@ -18,6 +18,8 @@
 import gsap from 'gsap';
 import { useSettingStore } from '~~/store/settings';
 import { useMainStore } from '~~/store/mainStore';
+import { storeToRefs } from 'pinia';
+
 
 const ctx = ref(null);
 const container = ref(null);
@@ -25,6 +27,7 @@ const time = ref(3);
 
 const settingStore = useSettingStore();
 const mainStore = useMainStore();
+const { getOpponentName } = storeToRefs(mainStore);
 
 const emits = defineEmits(['animComplete'])
 

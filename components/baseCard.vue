@@ -1,10 +1,10 @@
 <template>
-        <div class="px-5 py-4 2xl:px-12 2xl:text-4xl 2xl:py-10 text-lightBlack rounded-md outline outline-2 outline-lightBlack relative"
+        <div class="px-7 py-5 2xl:px-10 2xl:py-7 text-lightBlack rounded-md outline outline-2 outline-lightBlack relative"
             :class="[backgroundBack ? `bg-${backgroundBack}` : '', cursor, groupName]">
             <div class="invisible">
                 <slot></slot>
             </div>
-            <div class="absolute px-5 py-4 2xl:px-12 2xl:text-4xl 2xl:py-10 h-full w-full transition-all rounded-md outline outline-2 outline-lightBlack text-center flex justify-center items-center text-lightWhite"
+            <div class="absolute px-5 py-4 2xl:px-10 2xl:py-7 h-full w-full transition-all rounded-md outline outline-2 outline-lightBlack text-center flex justify-center items-center text-lightWhite"
                 :class="[backgroundFront ? `bg-${backgroundFront}` : '', cursor, !grounded ? translateXup : '', !grounded ? translateYleft : '', groupHover ? translateXdown : '', groupHover ? translateYright : '' ]">
                 <slot></slot>
             </div>

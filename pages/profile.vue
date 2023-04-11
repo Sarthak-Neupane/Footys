@@ -14,10 +14,10 @@
             <div class="flex flex-col items-start justify-center gap-5 lg:w-1/3">
                 <label for="name" class="text-xl 2xl:text-3xl font-semibold">Enter Your Name</label>
                 <input type="text" name="name" id="name"
-                    class="py-3 xl:py-6 2xl:py-9 rounded-lg bg-lightWhite border-2 border-darkBlack px-3 focus:outline-none lg:w-full"
+                    class="py-3 xl:py-6 2xl:py-7 2xl:text-xl rounded-lg bg-lightWhite border-2 border-darkBlack px-3 focus:outline-none lg:w-full"
                     v-model.trim="name" />
             </div>
-            <div class="lg:flex-row lg:gap-5 lg:w-1/3 w-full flex flex-col gap-8 justify-center items-center">
+            <div class="lg:flex-row lg:gap-5 lg:w-1/3 w-full flex flex-col gap-10 justify-between items-center 2xl:text-lg">
                 <base-card class="w-1/2" @click="save" background-back="lightWhite" background-front="blue"
                     cursor="cursor-pointer" :group-hover=true group-name="group" :grounded=false> Save
                 </base-card>

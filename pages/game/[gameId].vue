@@ -19,7 +19,8 @@
     </div>
   </Transition>
   <Teleport to="body" v-if="searching">
-    <PlayAgain @cancel-join="cancelSearch" @user-left="userLeft" :action="action">
+    <PlayAgain @cancel-join="cancelSearch" @user-left="userLeft" :action="action"
+      class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-['audiowide']">
     </PlayAgain>
   </Teleport>
   <Transition name="fade">
@@ -29,9 +30,8 @@
     <div class="min-h-screen bg-lightWhite relative" ref="page" v-else>
       <Transition name="slide-fade">
         <div class=" w-1/2 fixed z-10 top-5 left-1/2 -translate-x-1/2" v-if="opponentLeft || error.value">
-          <base-card class="" background-back="lightWhite"
-            :background-front="mainStore.getOpponentColor" cursor="cursor-default" :group-hover=false group-name="card"
-            :grounded=false>
+          <base-card class="" background-back="lightWhite" :background-front="mainStore.getOpponentColor"
+            cursor="cursor-default" :group-hover=false group-name="card" :grounded=false>
             {{ error.message }} </base-card>
         </div>
       </Transition>
@@ -50,7 +50,7 @@
             <transition name="fade" mode="out-in" appear>
               <div class="relative w-full md:w-full flex justify-center items-center" v-if="!getGameEnd">
                 <Transition name="fade" mode="out-in" appear>
-                  <div v-if="getMyTurn">
+                  <div v-if="getMyTurn" class="w-full">
                     <SearchBar @submit-answer="sendGuessToEmit" />
                   </div>
                 </Transition>
@@ -274,7 +274,7 @@ const sendGuessToEmit = async (e) => {
 }
 
 gridStore.$subscribe((mut, state) => {
-  if(!gridStore.currentAnswer) return
+  if (!gridStore.currentAnswer) return
   if (store.getGameEnd) return
   console.log('grid store changed', store.getGameEnd)
   $socket.emit('changeTurns', { gameId: store.getGameId }, (data) => {
@@ -364,7 +364,7 @@ const cancelSearch = () => {
 const userLeft = () => {
   console.log('AJJJJJJAJJAAJJAJAJAJA')
   error.value = true
-  if(searching.value) {
+  if (searching.value) {
     error.message = 'Oops, your opponent left the room. Try again'
     searching.value = false;
     action.value = false;
@@ -424,16 +424,15 @@ if ($socket && $socket.connected) {
 }
 
 .slide-fade-enter-active {
-    transition: all 0.2s ease-out;
+  transition: all 0.2s ease-out;
 }
 
 .slide-fade-leave-active {
-    transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
+  transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
 }
 
 .slide-fade-enter-from,
 .slide-fade-leave-to {
-    transform: translate(-50%, -100%);
+  transform: translate(-50%, -100%);
 }
-
 </style>
