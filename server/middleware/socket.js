@@ -78,7 +78,7 @@ const registerTimer = (socket, data) => {
       clearTimer(timer)
       if (io && currentRooms.length > 0) {
         const exactRoom = getExactRoom(data.gameId)
-        console.log('exact room', exactRoom.currentTurn)
+        // console.log('exact room', exactRoom.currentTurn)
         checkAnswer(
           null,
           {
@@ -173,7 +173,7 @@ export default defineEventHandler(({ node }) => {
         socketId: socket.id,
         name: socket.customName
       })
-      console.log('connected sockets', connectedIds)
+      // console.log('connected sockets', connectedIds)
 
       socket.on('setCustomName', (data, callback) => {
         socket.customName = data
@@ -246,7 +246,7 @@ export default defineEventHandler(({ node }) => {
       })
 
       socket.on('disconnecting', reason => {
-        console.log(`${socket.customId} disconnecting`)
+        // console.log(`${socket.customId} disconnecting`)
         connectedSockets = connectedSockets.filter(s => s !== socket.customId)
         connectedIds = connectedIds.filter(s => s.id !== socket.customId)
         for (const room of socket.rooms) {
@@ -256,7 +256,7 @@ export default defineEventHandler(({ node }) => {
         }
       })
       socket.on('disconnected', reason => {
-        console.log(`${socket.customId} disconnected`)
+        // console.log(`${socket.customId} disconnected`)
       })
     })
 
@@ -265,7 +265,7 @@ export default defineEventHandler(({ node }) => {
       callback({
         message: 'left lobby'
       })
-      console.log(socket.id, 'left lobby')
+      // console.log(socket.id, 'left lobby')
     }
 
     const joinGame = (socket, data, callback) => {
@@ -301,9 +301,9 @@ export default defineEventHandler(({ node }) => {
 
     const changeTurns = (socket, data, callback) => {
       const exactRoom = getExactRoom(data.gameId)
-      console.log('change turns', exactRoom)
+      // console.log('change turns', exactRoom)
       if (exactRoom.willChangeTurns) {
-        console.log('will change turns')
+        // console.log('will change turns')
         if (exactRoom.currentTurn === exactRoom.playerIds[0]) {
           exactRoom.currentTurn = exactRoom.playerIds[1]
         } else {
@@ -323,7 +323,7 @@ export default defineEventHandler(({ node }) => {
           }
         )
       } else {
-        console.log('will not change turns, now incrementing')
+        // console.log('will not change turns, now incrementing')
         exactRoom.willChangeTurns++
       }
     }
@@ -418,8 +418,8 @@ export default defineEventHandler(({ node }) => {
             }
             io.to(room).emit('playerLeft')
           }
-          console.log('player left')
-          console.log(exactRoom)
+          // console.log('player left')
+          // console.log(exactRoom)
         }
       }
     })

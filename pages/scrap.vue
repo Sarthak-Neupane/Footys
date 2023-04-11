@@ -38,10 +38,10 @@ const scrapPlayerTransfers = async (e) => {
 };
 
 const scrapClubSquad = async () => {
-  console.log("Scrapping for squad Started");
+  // console.log("Scrapping for squad Started");
   const res = await $fetch("/api/Scrap/scrapClubSquad");
 
-  console.log("scrapping for squad done");
+  // console.log("scrapping for squad done");
 
   res.data.forEach((e, i) => {
     scrapPlayerTransfers(e);
@@ -59,7 +59,7 @@ const scrapClubSquad = async () => {
         clubs: arrayData,
       });
     });
-    console.log(data.value);
+    // console.log(data.value);
     sendPlayerDetailToDb(data.value);
   });
 };
@@ -87,7 +87,7 @@ const sendPlayerDetailToDb = async (e) => {
     });
   });
 
-  console.log(finalArray)
+  // console.log(finalArray)
 
   addPlayerToDatabase(finalArray);
 };
@@ -97,21 +97,21 @@ const addPlayerToDatabase = async (e) => {
     method: "post",
     body: e,
   });
-  console.log(addPlayerToDatabase);
+  // console.log(addPlayerToDatabase);
 };
 
 const populatePlayerDatabase = async () => {
   const populatedDb = await $fetch("/api/Players/populatePlayers");
-  console.log(populatedDb);
+  // console.log(populatedDb);
 };
 
 const scrapLeague = async () => {
   const body = [];
-  console.log("Scrapping Started");
+  // console.log("Scrapping Started");
   const res = await $fetch(`/api/Scrap/scrapLeague`);
 
-  console.log("scrapping done");
-  console.log(res);
+  // console.log("scrapping done");
+  // console.log(res);
 
   res.data.forEach((e, i) => {
     body.push(e);
@@ -122,6 +122,6 @@ const scrapLeague = async () => {
     body: body,
   });
 
-  console.log(addToDb);
+  // console.log(addToDb);
 };
 </script>

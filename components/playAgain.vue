@@ -63,8 +63,8 @@ const findAGame = () => {
                 cancelSearch(false)
                 return
             }
-            console.log(data)
-            console.log('joined lobby')
+            // console.log(data)
+            // console.log('joined lobby')
             mainStore.setMySocketId(data.playerSocketId)
             $socket.emit('findGame')
         })
@@ -77,8 +77,8 @@ const cancelSearch = (val) => {
     clearTimeout(timeout.value)
     timeout.value = null
     $socket.emit('leaveLobby', { id: mainStore.getMyId }, (data) => {
-        console.log(data)
-        console.log('left lobby')
+        // console.log(data)
+        // console.log('left lobby')
     })
     if(val){
         emits('cancel-join')
@@ -92,8 +92,8 @@ $socket.on('gameFound', (data) => {
         matchmakingText.value = 'Game Found'
         gameFound.value = true
         $socket.emit('joinGame', { id: mainStore.getMyId, gameId: data.gameId }, (data) => {
-            console.log(data)
-            console.log('joined game')
+            // console.log(data)
+            // console.log('joined game')
         })
     }
 })
@@ -118,7 +118,7 @@ $socket.on('bothPlayersJoined', (data) => {
                 // set the gameData to store
                 gridStore.setColumnClubs(data.gameData.columnClubs)
                 gridStore.setRowClubs(data.gameData.rowClubs)
-                console.log('both players joined, now pushing to game page')
+                // console.log('both players joined, now pushing to game page')
                 $router.push(`/game/${data.gameId}`)
             }
         }, 1000)
@@ -130,14 +130,14 @@ $socket.on('cancelJoin', (data)=>{
 })
 
 $socket.on('playerLeft', (data) => {
-    console.log('user left')
+    // console.log('user left')
     nowSearching.value = false
     cancelSearch(false)
     emits('user-left')
 })
 
 onUnmounted(() => {
-    console.log('unmounted')
+    // console.log('unmounted')
     clearInterval(currentInterval.value)
     mounted.value = false
 })

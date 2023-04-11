@@ -1,6 +1,6 @@
 <template>
   <ClientOnly>
-    <base-error background-front="blue" v-if="error.value">
+    <base-error background-front="blue" v-if="error.value && error.message">
       {{ error.message }}
   </base-error>
 </ClientOnly>
@@ -90,7 +90,7 @@ const userLeft = () => {
 // SOCKET EVENTS STARTS
 const socketEvents = () => {
   $socket.on('disconnect', () => {
-    console.log('You have been disconnected')
+    // console.log('You have been disconnected')
   })
 }
 

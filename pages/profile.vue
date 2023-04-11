@@ -97,7 +97,7 @@ const save = () => {
         error.message = ''
         settingStore.setName(name.value)
         $socket.emit('setCustomName', name.value, (res)=>{
-            console.log(res)
+            // console.log(res)
             mainStore.setOpponentName(res.name)
         })
         setTimeout(()=>{
