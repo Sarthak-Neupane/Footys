@@ -12,7 +12,7 @@
     "@nuxtjs/tailwindcss": "^6.3.1",
     "babel-loader": "^9.1.2",
     "nuxt": "^3.1.2",
-    "nuxt-icon": "^0.3.2",
+    "nuxt-icon": "^0.3.3",
     "tailwindcss-text-fill-stroke": "^1.1.2"
   },
   "dependencies": {
@@ -23,6 +23,7 @@
     "@socket.io/admin-ui": "^0.5.1",
     "@types/uuid": "^9.0.1",
     "@vueuse/core": "^9.13.0",
+    "bad-words": "^3.0.4",
     "confetti-js": "^0.0.18",
     "cors": "^2.8.5",
     "express": "^4.18.2",
