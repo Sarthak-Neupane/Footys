@@ -12,7 +12,7 @@
     "@nuxtjs/tailwindcss": "^6.3.1",
     "babel-loader": "^9.1.2",
     "nuxt": "^3.1.2",
-    "nuxt-icon": "^0.3.2",
+    "nuxt-icon": "^0.3.3",
     "tailwindcss-text-fill-stroke": "^1.1.2"
   },
   "dependencies": {

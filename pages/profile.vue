@@ -11,18 +11,20 @@
     <section class="h-screen bg-green w-full flex justify-center items-center">
         <form class="flex justify-center items-center gap-14 flex-col w-full">
             <logo-name class="font-black text-6xl xl:text-8xl" foe-color="blue"></logo-name>
-            <div class="flex flex-col items-start justify-center gap-5">
-                <label for="name" class="text-xl font-semibold">Enter Your Name</label>
+            <div class="flex flex-col items-start justify-center gap-5 lg:w-1/3">
+                <label for="name" class="text-xl 2xl:text-3xl font-semibold">Enter Your Name</label>
                 <input type="text" name="name" id="name"
-                    class="py-3 rounded-lg bg-lightWhite border-2 border-darkBlack px-3 focus:outline-none"
+                    class="py-3 xl:py-6 2xl:py-9 rounded-lg bg-lightWhite border-2 border-darkBlack px-3 focus:outline-none lg:w-full"
                     v-model.trim="name" />
             </div>
-            <base-card class="w-1/2" @click="save" background-back="lightWhite" background-front="blue"
-                cursor="cursor-pointer" :group-hover=true group-name="group" :grounded=false> Save
-            </base-card>
-            <base-card @click="routerPush" class="w-1/2" background-back="lightWhite" background-front="blue"
-                cursor="cursor-pointer" :group-hover=true group-name="group" :grounded=false> Lets Play
-            </base-card>
+            <div class="lg:flex-row lg:gap-5 lg:w-1/3 w-full flex flex-col gap-8 justify-center items-center">
+                <base-card class="w-1/2" @click="save" background-back="lightWhite" background-front="blue"
+                    cursor="cursor-pointer" :group-hover=true group-name="group" :grounded=false> Save
+                </base-card>
+                <base-card @click="routerPush" class="w-1/2" background-back="lightWhite" background-front="blue"
+                    cursor="cursor-pointer" :group-hover=true group-name="group" :grounded=false> Lets Play
+                </base-card>
+            </div>
         </form>
     </section>
 </template>

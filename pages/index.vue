@@ -5,6 +5,9 @@
   </base-error>
 </ClientOnly>
   <div class="h-screen grid content-center bg-green relative">
+    <NuxtLink to="/profile" class="rounded-md p-2 bg-blue absolute top-10 right-10 translate-x-5 -translate-y-5 cursor-pointer">
+      <Icon name="uil:setting" size="50px" class="text-lightWhite" />
+    </NuxtLink>
     <div class="container flex flex-col justify-center items-center gap-20 mx-auto">
       <logo-name class="font-black text-6xl xl:text-8xl" foe-color="blue"></logo-name>
       <div class="flex flex-col justify-center items-center gap-12 text-center text-3xl">
