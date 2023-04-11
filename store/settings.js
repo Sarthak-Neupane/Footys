@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
 
 export const useSettingStore = defineStore('settings', () => {
-  const name = ref('guest101')
+  const name = ref(localStorage?.getItem('name') || 'guest101')
 
-  const setName = value => {
+  const setName = (value) => {
     name.value = value
+    localStorage.setItem('name', value)
   }
 
   const getName = computed(()=>{

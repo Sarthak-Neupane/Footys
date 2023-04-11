@@ -6,6 +6,7 @@ export const useMainStore = defineStore('main', () => {
   const opponentColor = ref(null)
   const myId = ref(null)
   const mySocketId = ref(null)
+  const opponentName = ref(null)
 
   const setMyId = id => {
     myId.value = id
@@ -52,10 +53,19 @@ export const useMainStore = defineStore('main', () => {
     myTurn.value = !myTurn.value
   }
 
+  const setOpponentName = name => {
+    opponentName.value = name
+  }
+
+  const getOpponentName = computed(() => {
+    return opponentName.value
+  })
+
   const reset = () => {
     myTurn.value = null
     myColor.value = null
     opponentColor.value = null
+    opponentName.value = null
     myId.value = localStorage.getItem('id') || null
   }
 
@@ -71,6 +81,8 @@ export const useMainStore = defineStore('main', () => {
     setMyTurn,
     getMyTurn,
     changeTurns,
-    reset
+    setOpponentName,
+    getOpponentName,
+    reset,
   }
 })

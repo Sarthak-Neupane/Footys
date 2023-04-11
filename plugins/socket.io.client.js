@@ -7,6 +7,7 @@ export default defineNuxtPlugin(NuxtApp => {
   let socket
   let socketError
   let customId = localStorage.getItem('id')
+  let customName = localStorage.getItem('name') || 'guest101'
 
   console.log(customId)
 
@@ -17,13 +18,15 @@ export default defineNuxtPlugin(NuxtApp => {
   if (config.public.environment === 'production') {
     socket = io({
       auth: {
-        id: customId
+        id: customId,
+        name: customName
       }
     })
   } else {
     socket = io('http://localhost:8000', {
       auth: {
-        id: customId
+        id: customId,
+        name: customName
       }
     })
   }

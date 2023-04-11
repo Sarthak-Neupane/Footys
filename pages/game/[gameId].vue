@@ -181,14 +181,18 @@ onBeforeMount(async () => {
     gridStore.setColumnClubs(data.columnClubs)
     gridStore.setRowClubs(data.rowClubs)
 
+    console.log('data', data)
+
     if (data.player1 === $socket.id) {
       mainStore.setMyTurn(true)
       mainStore.setMyColor(data.color1)
       mainStore.setOpponentColor(data.color2)
+      mainStore.setOpponentName(data.player2Name)
     } else {
       mainStore.setMyTurn(false)
       mainStore.setMyColor(data.color2)
       mainStore.setOpponentColor(data.color1)
+      mainStore.setOpponentName(data.player1Name)
     }
   })
 })

@@ -1,12 +1,12 @@
 <template>
     <section class="h-full w-full bg-darkWhite flex justify-center items-center relative" ref="container">
         <div class=" w-full flex justify-between items-stretch gap-14 flex-col">
-            <h1 class="py-4 text-3xl text-blue font-bold" id="player1">Player One</h1>
+            <h1 class="py-4 text-3xl text-blue font-bold" id="player1">  {{ settingStore.getName }} </h1>
             <h1 class="py-4 text-center text-6xl font-black" id="vs">
                 <span class="text-green">V</span>
                 <span class="text-blue">S</span>
             </h1>
-            <h1 class="py-4 text-right text-3xl text-green font-bold" id="player2">Player Two</h1>
+            <h1 class="py-4 text-right text-3xl text-green font-bold" id="player2">{{ mainStore.getOpponentName }}</h1>
         </div>
         <div class="absolute top-5 left-1/2 -translate-x-1/2 text-3xl" id="time">
             {{time}}
@@ -16,10 +16,15 @@
 
 <script setup>
 import gsap from 'gsap';
+import { useSettingStore } from '~~/store/settings';
+import { useMainStore } from '~~/store/mainStore';
 
 const ctx = ref(null);
 const container = ref(null);
 const time = ref(3);
+
+const settingStore = useSettingStore();
+const mainStore = useMainStore();
 
 const emits = defineEmits(['animComplete'])
 

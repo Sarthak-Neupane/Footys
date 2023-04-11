@@ -8,7 +8,7 @@ let connectedSockets = []
 let connectedIds = []
 
 const checkAnswer = async (socket, data, isEmpty) => {
-  let checkedWinnerData = { result: false };
+  let checkedWinnerData = { result: false }
   const checkedData = await $fetch(`/api/Game/gameData/${data.gameId}`, {
     method: 'POST',
     body: {
@@ -21,7 +21,7 @@ const checkAnswer = async (socket, data, isEmpty) => {
       action: isEmpty ? 'emptyCheck' : 'checkAnswer'
     }
   })
-  if(checkedData.result.correct){
+  if (checkedData.result.correct) {
     checkedWinnerData = await $fetch(`/api/Game/checkWinner`, {
       method: 'POST',
       body: {
@@ -34,7 +34,7 @@ const checkAnswer = async (socket, data, isEmpty) => {
   io.to(data.gameId).emit('checkedAnswer', {
     details: {
       meta: checkedData.meta,
-      result: checkedData.result,
+      result: checkedData.result
     },
     winner: checkedWinnerData.result
   })
@@ -61,6 +61,11 @@ const getPlayerIdFromSocketId = socketId => {
 const getSocketIdFromPlayerId = playerId => {
   const player = connectedIds.find(player => player.id === playerId)
   return player.socketId
+}
+
+const getPlayerNameFromSocketId = socketId => {
+  const player = connectedIds.find(player => player.socketId === socketId)
+  return player.name
 }
 
 const registerTimer = (socket, data) => {
@@ -125,10 +130,12 @@ export default defineEventHandler(({ node }) => {
         const gameRoomId = uuidv4()
         const gameRoom = gameRoomId.replace(/-/g, '')
 
-        io?.to(numClients[0]).to(numClients[1]).emit('gameFound', {
-          gameId: gameRoom,
-          players: [numClients[0], numClients[1]]
-        })
+        io?.to(numClients[0])
+          .to(numClients[1])
+          .emit('gameFound', {
+            gameId: gameRoom,
+            players: [numClients[0], numClients[1]]
+          })
       } else {
         // console.log('no game found')
       }
@@ -143,6 +150,15 @@ export default defineEventHandler(({ node }) => {
       next()
     })
 
+    io.use((socket, next) => {
+      const customName = socket.handshake.auth.name
+      if (!customName) {
+        return next(new Error('invalid name'))
+      }
+      socket.customName = customName
+      next()
+    })
+
     io.use(async (socket, next) => {
       if (connectedSockets.includes(socket.customId)) {
         return next(new Error('Already Connected, Please Close Connected Tabs'))
@@ -154,9 +170,18 @@ export default defineEventHandler(({ node }) => {
       connectedSockets.push(socket.customId)
       connectedIds.push({
         id: socket.customId,
-        socketId: socket.id
+        socketId: socket.id,
+        name: socket.customName
       })
       console.log('connected sockets', connectedIds)
+
+      socket.on('setCustomName', (data, callback) => {
+        socket.customName = data.name
+        callback({
+          message: 'name set',
+          name: data.name
+        })
+      })
 
       socket.on('joinLobby', (data, callback) => {
         socket.join('lobby')
@@ -203,8 +228,8 @@ export default defineEventHandler(({ node }) => {
         leaveRoom(socket, data)
       })
       socket.on('leaveRoomForce', data => {
-        for(const room of socket.rooms) {
-          if(room !== socket.id) {
+        for (const room of socket.rooms) {
+          if (room !== socket.id) {
             leaveRoom(socket, { gameId: room })
           }
         }
@@ -219,7 +244,7 @@ export default defineEventHandler(({ node }) => {
         connectedIds = connectedIds.filter(s => s.id !== socket.customId)
         for (const room of socket.rooms) {
           if (room !== socket.id) {
-            leaveRoom(socket, { gameId: room }, ()=>{})
+            leaveRoom(socket, { gameId: room }, () => {})
           }
         }
       })
@@ -262,6 +287,8 @@ export default defineEventHandler(({ node }) => {
         playersReady: exactRoom.playersReady,
         columnClubs: exactRoom.gameData.columnClubs,
         rowClubs: exactRoom.gameData.rowClubs,
+        player1Name: exactRoom.player1Name,
+        player2Name: exactRoom.player2Name
       })
     }
 
@@ -275,15 +302,19 @@ export default defineEventHandler(({ node }) => {
         } else {
           exactRoom.currentTurn = exactRoom.playerIds[0]
         }
-        io.to(data.gameId).emit('changeTurns', {
-          currentTurn: exactRoom.currentTurn
-        }, () => {
-          exactRoom.willChangeTurns = 0
-          exactRoom.timer = registerTimer(socket, {
-            gameId: data.gameId,
-            time: 30
-          })
-        })
+        io.to(data.gameId).emit(
+          'changeTurns',
+          {
+            currentTurn: exactRoom.currentTurn
+          },
+          () => {
+            exactRoom.willChangeTurns = 0
+            exactRoom.timer = registerTimer(socket, {
+              gameId: data.gameId,
+              time: 30
+            })
+          }
+        )
       } else {
         console.log('will not change turns, now incrementing')
         exactRoom.willChangeTurns++
@@ -337,8 +368,10 @@ export default defineEventHandler(({ node }) => {
             timer: null,
             willChangeTurns: 0, // 0 - won't change, 1 - will change
             player1: numClients[player1],
+            player1Name: getPlayerNameFromSocketId(numClients[player1]),
             player1Color: player1 === 0 ? 'green' : 'blue',
             player2: numClients[player2],
+            player2Name: getPlayerNameFromSocketId(numClients[player2]),
             player2Color: player2 === 0 ? 'green' : 'blue',
             currentTurn: getPlayerIdFromSocketId(numClients[player1]),
             gameData: {
@@ -361,19 +394,19 @@ export default defineEventHandler(({ node }) => {
     })
 
     io.of('/').adapter.on('leave-room', (room, id) => {
-      if(room !== 'lobby') {
+      if (room !== 'lobby') {
         const clients = io?.of('/').adapter.rooms.get(room)
         // get the number of clients
         const numClients = [...(clients ? clients : 0)]
-        if(numClients.length === 0) {
+        if (numClients.length === 0) {
           currentRooms = currentRooms.filter(r => r.id !== room)
         } else {
           const exactRoom = getExactRoom(room)
-          if(exactRoom) {
+          if (exactRoom) {
             clearTimer(exactRoom.timer)
-            if(exactRoom.player1 === id) {
+            if (exactRoom.player1 === id) {
               exactRoom.player1 = null
-            } else if(exactRoom.player2 === id) {
+            } else if (exactRoom.player2 === id) {
               exactRoom.player2 = null
             }
             io.to(room).emit('playerLeft')

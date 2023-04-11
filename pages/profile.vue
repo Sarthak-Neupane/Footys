@@ -32,11 +32,15 @@
 <script setup>
 import filter from 'bad-words'
 import { useSettingStore } from '~~/store/settings'
+import { useMainStore } from '~~/store/mainStore';
 import { useRoute, useRouter } from 'vue-router';
+
+const { $socket } = useNuxtApp();
 
 const badWord = new filter()
 
 const settingStore = useSettingStore()
+const mainStore = useMainStore()
 
 const $route = useRoute()
 const $router = useRouter()
@@ -92,6 +96,10 @@ const save = () => {
         error.value = false
         error.message = ''
         settingStore.setName(name.value)
+        $socket.emit('setCustomName', name.value, (res)=>{
+            console.log(res)
+            mainStore.setOpponentName(res.name)
+        })
         setTimeout(()=>{
             error.value = true
             error.message = 'Name changed to ' + settingStore.getName
