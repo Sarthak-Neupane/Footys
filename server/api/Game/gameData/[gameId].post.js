@@ -85,9 +85,9 @@ const checkAnswer = async data => {
 export default defineEventHandler(async event => {
   const body = await readBody(event)
 
-  // const getId = event.context.params.id
+  const getId = event.context.params.gameId
 
-  const getId = '9735d45673654baba5e336bb6ee4dfb0'
+  console.log(getId)
 
   if (!data) {
     await getData(getId)
